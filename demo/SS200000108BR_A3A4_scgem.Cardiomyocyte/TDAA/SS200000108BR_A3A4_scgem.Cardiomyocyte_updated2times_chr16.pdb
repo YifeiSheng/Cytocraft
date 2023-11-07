@@ -1,0 +1,38 @@
+HEADER    CHROMOSOMES                             26-Sep-23   CMB1
+TITLE     CHROMOSOME CONFORMATION INFERED FROM sST DATA
+ATOM    243  O   GLY H 236      -0.669   0.683  -0.894  2.00 10.00           O
+ATOM    244  O   GLY H 237       0.439   0.326   0.438  2.00 10.00           O
+ATOM    245  O   GLY H 238      -0.029   0.107  -0.363  2.00 10.00           O
+ATOM    246  O   GLY H 239       0.209  -0.178   0.073  2.00 10.00           O
+ATOM    247  O   GLY H 240       0.647   0.401   0.509  2.00 10.00           O
+ATOM    248  O   GLY H 241      -0.178   0.821   0.182  2.00 10.00           O
+ATOM    249  O   GLY H 242       0.126  -0.067  -0.207  2.00 10.00           O
+ATOM    250  O   GLY H 243      -0.081   0.087   0.036  2.00 10.00           O
+ATOM    251  O   GLY H 244      -0.363  -0.211  -0.102  2.00 10.00           O
+ATOM    252  O   GLY H 245       0.097  -0.473   0.332  2.00 10.00           O
+ATOM    253  O   GLY H 246       0.041   0.267  -0.198  2.00 10.00           O
+ATOM    254  O   GLY H 247       0.479   0.066   0.286  2.00 10.00           O
+ATOM    255  O   GLY H 248       0.058  -0.216  -0.240  2.00 10.00           O
+ATOM    256  O   GLY H 249      -0.077  -0.259  -0.274  2.00 10.00           O
+ATOM    257  O   GLY H 250      -0.227  -0.138   0.111  2.00 10.00           O
+ATOM    258  O   GLY H 251       1.070  -0.810   0.431  2.00 10.00           O
+ATOM    259  O   GLY H 252       0.416   0.573  -0.441  2.00 10.00           O
+TER     260      GLY H 252
+CONECT  243  244
+CONECT  244  243  245
+CONECT  245  244  246
+CONECT  246  245  247
+CONECT  247  246  248
+CONECT  248  247  249
+CONECT  249  248  250
+CONECT  250  249  251
+CONECT  251  250  252
+CONECT  252  251  253
+CONECT  253  252  254
+CONECT  254  253  255
+CONECT  255  254  256
+CONECT  256  255  257
+CONECT  257  256  258
+CONECT  258  257  259
+CONECT  259  258
+END

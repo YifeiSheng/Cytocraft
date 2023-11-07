@@ -1,0 +1,64 @@
+HEADER    CHROMOSOMES                             26-Sep-23   CMB1
+TITLE     CHROMOSOME CONFORMATION INFERED FROM sST DATA
+ATOM    486  O   GLY P 471      -4.069  -4.831  -1.501  2.00 10.00           O
+ATOM    487  O   GLY P 472       0.814  -5.722  -2.632  2.00 10.00           O
+ATOM    488  O   GLY P 473       0.533   0.985   0.736  2.00 10.00           O
+ATOM    489  O   GLY P 474       3.737  10.129  -7.514  2.00 10.00           O
+ATOM    490  O   GLY P 475       8.960  -2.978   1.808  2.00 10.00           O
+ATOM    491  O   GLY P 476       2.004  -1.606   1.051  2.00 10.00           O
+ATOM    492  O   GLY P 477       5.659   6.496   4.824  2.00 10.00           O
+ATOM    493  O   GLY P 478       4.339  -7.375  -2.439  2.00 10.00           O
+ATOM    494  O   GLY P 479       6.742   5.937  -1.000  2.00 10.00           O
+ATOM    495  O   GLY P 480      -8.910   5.694 -16.931  2.00 10.00           O
+ATOM    496  O   GLY P 481       2.010   0.262  -3.455  2.00 10.00           O
+ATOM    497  O   GLY P 482       0.925   2.707  -2.043  2.00 10.00           O
+ATOM    498  O   GLY P 483       2.938  -1.170  -1.103  2.00 10.00           O
+ATOM    499  O   GLY P 484      -4.153   7.336  -5.559  2.00 10.00           O
+ATOM    500  O   GLY P 485       3.281   0.155  -3.753  2.00 10.00           O
+ATOM    501  O   GLY P 486       6.662  -1.148   1.890  2.00 10.00           O
+ATOM    502  O   GLY P 487      -3.080   1.441  -7.920  2.00 10.00           O
+ATOM    503  O   GLY P 488      -1.020  -0.996   1.804  2.00 10.00           O
+ATOM    504  O   GLY P 489      -0.445  -0.833   0.279  2.00 10.00           O
+ATOM    505  O   GLY P 490      -3.836   1.303  -2.774  2.00 10.00           O
+ATOM    506  O   GLY P 491      -3.341   6.682  -4.101  2.00 10.00           O
+ATOM    507  O   GLY P 492       6.092  -9.592  -2.325  2.00 10.00           O
+ATOM    508  O   GLY P 493       2.606   0.842   1.004  2.00 10.00           O
+ATOM    509  O   GLY P 494      -5.001   3.282   2.672  2.00 10.00           O
+ATOM    510  O   GLY P 495      -0.370  -3.770   5.166  2.00 10.00           O
+ATOM    511  O   GLY P 496      -1.382   2.432  -0.568  2.00 10.00           O
+ATOM    512  O   GLY P 497       7.487   6.643   5.942  2.00 10.00           O
+ATOM    513  O   GLY P 498       1.441  -2.576  -1.094  2.00 10.00           O
+ATOM    514  O   GLY P 499      -2.700  -4.771   3.636  2.00 10.00           O
+ATOM    515  O   GLY P 500       3.502   4.718   1.929  2.00 10.00           O
+TER     516      GLY P 500
+CONECT  486  487
+CONECT  487  486  488
+CONECT  488  487  489
+CONECT  489  488  490
+CONECT  490  489  491
+CONECT  491  490  492
+CONECT  492  491  493
+CONECT  493  492  494
+CONECT  494  493  495
+CONECT  495  494  496
+CONECT  496  495  497
+CONECT  497  496  498
+CONECT  498  497  499
+CONECT  499  498  500
+CONECT  500  499  501
+CONECT  501  500  502
+CONECT  502  501  503
+CONECT  503  502  504
+CONECT  504  503  505
+CONECT  505  504  506
+CONECT  506  505  507
+CONECT  507  506  508
+CONECT  508  507  509
+CONECT  509  508  510
+CONECT  510  509  511
+CONECT  511  510  512
+CONECT  512  511  513
+CONECT  513  512  514
+CONECT  514  513  515
+CONECT  515  514
+END

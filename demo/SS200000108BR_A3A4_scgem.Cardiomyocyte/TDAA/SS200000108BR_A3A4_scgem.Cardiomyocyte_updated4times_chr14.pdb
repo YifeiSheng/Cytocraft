@@ -1,0 +1,40 @@
+HEADER    CHROMOSOMES                             26-Sep-23   CMB1
+TITLE     CHROMOSOME CONFORMATION INFERED FROM sST DATA
+ATOM    195  O   GLY F 190       0.182  -0.172   0.043  2.00 10.00           O
+ATOM    196  O   GLY F 191      -0.467   0.146  -0.354  2.00 10.00           O
+ATOM    197  O   GLY F 192       0.486   0.306  -0.163  2.00 10.00           O
+ATOM    198  O   GLY F 193      -0.345   0.853  -0.269  2.00 10.00           O
+ATOM    199  O   GLY F 194       0.147   0.159  -0.132  2.00 10.00           O
+ATOM    200  O   GLY F 195       0.220   0.158  -0.357  2.00 10.00           O
+ATOM    201  O   GLY F 196      -0.028   0.308  -0.194  2.00 10.00           O
+ATOM    202  O   GLY F 197      -1.153   0.079   1.112  2.00 10.00           O
+ATOM    203  O   GLY F 198      -0.901   0.295  -0.346  2.00 10.00           O
+ATOM    204  O   GLY F 199      -0.701  -0.224   0.561  2.00 10.00           O
+ATOM    205  O   GLY F 200      -0.223  -0.127   0.218  2.00 10.00           O
+ATOM    206  O   GLY F 201       0.527  -0.436  -0.651  2.00 10.00           O
+ATOM    207  O   GLY F 202       0.435  -0.115  -0.196  2.00 10.00           O
+ATOM    208  O   GLY F 203      -0.099  -0.037  -0.395  2.00 10.00           O
+ATOM    209  O   GLY F 204      -0.054  -0.042  -0.546  2.00 10.00           O
+ATOM    210  O   GLY F 205       0.945  -0.419   0.989  2.00 10.00           O
+ATOM    211  O   GLY F 206       0.327   0.041   0.018  2.00 10.00           O
+ATOM    212  O   GLY F 207       0.181   0.131   0.185  2.00 10.00           O
+TER     213      GLY F 207
+CONECT  195  196
+CONECT  196  195  197
+CONECT  197  196  198
+CONECT  198  197  199
+CONECT  199  198  200
+CONECT  200  199  201
+CONECT  201  200  202
+CONECT  202  201  203
+CONECT  203  202  204
+CONECT  204  203  205
+CONECT  205  204  206
+CONECT  206  205  207
+CONECT  207  206  208
+CONECT  208  207  209
+CONECT  209  208  210
+CONECT  210  209  211
+CONECT  211  210  212
+CONECT  212  211
+END

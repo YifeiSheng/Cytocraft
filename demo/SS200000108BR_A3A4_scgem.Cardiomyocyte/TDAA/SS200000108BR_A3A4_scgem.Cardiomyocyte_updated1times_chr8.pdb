@@ -1,0 +1,52 @@
+HEADER    CHROMOSOMES                             26-Sep-23   CMB1
+TITLE     CHROMOSOME CONFORMATION INFERED FROM sST DATA
+ATOM    574  O   GLY R 557      -0.126  -0.110  -0.208  2.00 10.00           O
+ATOM    575  O   GLY R 558      -0.602   0.071  -0.243  2.00 10.00           O
+ATOM    576  O   GLY R 559       0.099  -0.303  -0.331  2.00 10.00           O
+ATOM    577  O   GLY R 560       0.096   0.241   0.357  2.00 10.00           O
+ATOM    578  O   GLY R 561       0.378   0.168   0.564  2.00 10.00           O
+ATOM    579  O   GLY R 562       0.130   0.140   0.088  2.00 10.00           O
+ATOM    580  O   GLY R 563       0.177  -0.144   0.018  2.00 10.00           O
+ATOM    581  O   GLY R 564      -0.260   0.197   0.047  2.00 10.00           O
+ATOM    582  O   GLY R 565      -0.237   0.040   0.180  2.00 10.00           O
+ATOM    583  O   GLY R 566      -0.122   0.008   0.019  2.00 10.00           O
+ATOM    584  O   GLY R 567      -0.505  -0.082  -0.347  2.00 10.00           O
+ATOM    585  O   GLY R 568       0.132   0.119   0.349  2.00 10.00           O
+ATOM    586  O   GLY R 569       0.491   0.100  -0.126  2.00 10.00           O
+ATOM    587  O   GLY R 570      -0.471  -0.619   0.013  2.00 10.00           O
+ATOM    588  O   GLY R 571       0.251  -0.151  -0.211  2.00 10.00           O
+ATOM    589  O   GLY R 572      -0.059   0.267  -0.628  2.00 10.00           O
+ATOM    590  O   GLY R 573       0.019   0.106  -0.129  2.00 10.00           O
+ATOM    591  O   GLY R 574      -0.095   0.082  -0.329  2.00 10.00           O
+ATOM    592  O   GLY R 575      -0.071  -0.278  -0.251  2.00 10.00           O
+ATOM    593  O   GLY R 576      -0.423  -0.110  -0.475  2.00 10.00           O
+ATOM    594  O   GLY R 577       0.193   0.078   0.314  2.00 10.00           O
+ATOM    595  O   GLY R 578      -0.060  -0.080  -0.008  2.00 10.00           O
+ATOM    596  O   GLY R 579       0.274   0.083  -0.135  2.00 10.00           O
+ATOM    597  O   GLY R 580      -0.180  -0.060  -0.010  2.00 10.00           O
+TER     598      GLY R 580
+CONECT  574  575
+CONECT  575  574  576
+CONECT  576  575  577
+CONECT  577  576  578
+CONECT  578  577  579
+CONECT  579  578  580
+CONECT  580  579  581
+CONECT  581  580  582
+CONECT  582  581  583
+CONECT  583  582  584
+CONECT  584  583  585
+CONECT  585  584  586
+CONECT  586  585  587
+CONECT  587  586  588
+CONECT  588  587  589
+CONECT  589  588  590
+CONECT  590  589  591
+CONECT  591  590  592
+CONECT  592  591  593
+CONECT  593  592  594
+CONECT  594  593  595
+CONECT  595  594  596
+CONECT  596  595  597
+CONECT  597  596
+END

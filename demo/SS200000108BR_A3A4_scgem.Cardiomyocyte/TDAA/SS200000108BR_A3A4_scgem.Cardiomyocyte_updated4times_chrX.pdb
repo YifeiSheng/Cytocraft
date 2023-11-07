@@ -1,0 +1,46 @@
+HEADER    CHROMOSOMES                             26-Sep-23   CMB1
+TITLE     CHROMOSOME CONFORMATION INFERED FROM sST DATA
+ATOM    665  O   GLY h 626      -0.222  -0.160  -0.353  2.00 10.00           O
+ATOM    666  O   GLY h 627      -0.414   0.270   0.259  2.00 10.00           O
+ATOM    667  O   GLY h 628      -0.029   0.154  -0.094  2.00 10.00           O
+ATOM    668  O   GLY h 629      -0.023  -0.018  -0.104  2.00 10.00           O
+ATOM    669  O   GLY h 630       0.938  -0.028   0.413  2.00 10.00           O
+ATOM    670  O   GLY h 631      -0.383   0.186   0.007  2.00 10.00           O
+ATOM    671  O   GLY h 632       0.257   0.711  -0.318  2.00 10.00           O
+ATOM    672  O   GLY h 633       0.226   0.695   0.142  2.00 10.00           O
+ATOM    673  O   GLY h 634      -0.068   0.119  -0.328  2.00 10.00           O
+ATOM    674  O   GLY h 635       0.008  -0.022   0.139  2.00 10.00           O
+ATOM    675  O   GLY h 636      -0.590  -0.483   0.013  2.00 10.00           O
+ATOM    676  O   GLY h 637      -0.139  -0.382   0.172  2.00 10.00           O
+ATOM    677  O   GLY h 638       0.091   0.091   0.142  2.00 10.00           O
+ATOM    678  O   GLY h 639      -0.742  -0.510   0.327  2.00 10.00           O
+ATOM    679  O   GLY h 640      -0.331  -0.118   0.976  2.00 10.00           O
+ATOM    680  O   GLY h 641       0.090   0.599   1.140  2.00 10.00           O
+ATOM    681  O   GLY h 642       0.397   0.078  -0.723  2.00 10.00           O
+ATOM    682  O   GLY h 643      -0.130  -0.576  -0.935  2.00 10.00           O
+ATOM    683  O   GLY h 644      -0.412  -0.058   0.052  2.00 10.00           O
+ATOM    684  O   GLY h 645       0.241  -0.332  -0.338  2.00 10.00           O
+ATOM    685  O   GLY h 646       0.113   0.115  -0.471  2.00 10.00           O
+TER     686      GLY h 646
+CONECT  665  666
+CONECT  666  665  667
+CONECT  667  666  668
+CONECT  668  667  669
+CONECT  669  668  670
+CONECT  670  669  671
+CONECT  671  670  672
+CONECT  672  671  673
+CONECT  673  672  674
+CONECT  674  673  675
+CONECT  675  674  676
+CONECT  676  675  677
+CONECT  677  676  678
+CONECT  678  677  679
+CONECT  679  678  680
+CONECT  680  679  681
+CONECT  681  680  682
+CONECT  682  681  683
+CONECT  683  682  684
+CONECT  684  683  685
+CONECT  685  684
+END

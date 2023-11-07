@@ -1,0 +1,56 @@
+HEADER    CHROMOSOMES                             26-Sep-23   CMB1
+TITLE     CHROMOSOME CONFORMATION INFERED FROM sST DATA
+ATOM    382  O   GLY M 370      -0.586   0.247   0.116  2.00 10.00           O
+ATOM    383  O   GLY M 371       0.390  -0.361  -0.576  2.00 10.00           O
+ATOM    384  O   GLY M 372       0.810  -1.753   1.729  2.00 10.00           O
+ATOM    385  O   GLY M 373      -0.330  -0.265   0.139  2.00 10.00           O
+ATOM    386  O   GLY M 374      -0.206  -0.017  -0.372  2.00 10.00           O
+ATOM    387  O   GLY M 375      -0.192  -0.127  -0.032  2.00 10.00           O
+ATOM    388  O   GLY M 376      -0.169  -0.373   0.617  2.00 10.00           O
+ATOM    389  O   GLY M 377      -0.351   0.053  -0.120  2.00 10.00           O
+ATOM    390  O   GLY M 378       0.202   0.529   0.609  2.00 10.00           O
+ATOM    391  O   GLY M 379      -0.330   0.127   0.154  2.00 10.00           O
+ATOM    392  O   GLY M 380      -0.238   0.150   0.053  2.00 10.00           O
+ATOM    393  O   GLY M 381       0.669   0.287  -0.057  2.00 10.00           O
+ATOM    394  O   GLY M 382       0.794   1.173   0.608  2.00 10.00           O
+ATOM    395  O   GLY M 383      -0.373   0.341  -0.068  2.00 10.00           O
+ATOM    396  O   GLY M 384       0.069   0.168   0.117  2.00 10.00           O
+ATOM    397  O   GLY M 385       0.416   0.310  -0.398  2.00 10.00           O
+ATOM    398  O   GLY M 386      -0.401  -0.055   0.004  2.00 10.00           O
+ATOM    399  O   GLY M 387      -0.651   0.752   0.125  2.00 10.00           O
+ATOM    400  O   GLY M 388       1.129  -0.236  -0.273  2.00 10.00           O
+ATOM    401  O   GLY M 389      -0.146  -0.280  -0.132  2.00 10.00           O
+ATOM    402  O   GLY M 390       0.407  -0.928   0.785  2.00 10.00           O
+ATOM    403  O   GLY M 391      -0.006  -0.367   0.190  2.00 10.00           O
+ATOM    404  O   GLY M 392       0.256   0.133  -0.235  2.00 10.00           O
+ATOM    405  O   GLY M 393      -0.171   0.505   0.018  2.00 10.00           O
+ATOM    406  O   GLY M 394       0.191   0.318   0.022  2.00 10.00           O
+ATOM    407  O   GLY M 395       0.316  -0.229   0.768  2.00 10.00           O
+TER     408      GLY M 395
+CONECT  382  383
+CONECT  383  382  384
+CONECT  384  383  385
+CONECT  385  384  386
+CONECT  386  385  387
+CONECT  387  386  388
+CONECT  388  387  389
+CONECT  389  388  390
+CONECT  390  389  391
+CONECT  391  390  392
+CONECT  392  391  393
+CONECT  393  392  394
+CONECT  394  393  395
+CONECT  395  394  396
+CONECT  396  395  397
+CONECT  397  396  398
+CONECT  398  397  399
+CONECT  399  398  400
+CONECT  400  399  401
+CONECT  401  400  402
+CONECT  402  401  403
+CONECT  403  402  404
+CONECT  404  403  405
+CONECT  405  404  406
+CONECT  406  405  407
+CONECT  407  406
+END

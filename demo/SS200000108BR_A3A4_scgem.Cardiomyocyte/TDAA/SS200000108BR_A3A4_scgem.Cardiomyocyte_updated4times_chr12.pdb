@@ -1,0 +1,48 @@
+HEADER    CHROMOSOMES                             26-Sep-23   CMB1
+TITLE     CHROMOSOME CONFORMATION INFERED FROM sST DATA
+ATOM    149  O   GLY D 146       0.199   0.448  -0.016  2.00 10.00           O
+ATOM    150  O   GLY D 147       0.284   0.083   0.093  2.00 10.00           O
+ATOM    151  O   GLY D 148       0.076   0.027  -0.390  2.00 10.00           O
+ATOM    152  O   GLY D 149      -0.208  -0.337   0.092  2.00 10.00           O
+ATOM    153  O   GLY D 150       0.120   0.117  -0.114  2.00 10.00           O
+ATOM    154  O   GLY D 151       0.935  -0.385  -0.110  2.00 10.00           O
+ATOM    155  O   GLY D 152      -0.139   0.043  -0.193  2.00 10.00           O
+ATOM    156  O   GLY D 153      -0.139  -0.131   0.036  2.00 10.00           O
+ATOM    157  O   GLY D 154       0.184   0.079   0.983  2.00 10.00           O
+ATOM    158  O   GLY D 155       0.612   0.188   0.452  2.00 10.00           O
+ATOM    159  O   GLY D 156       0.196   0.725  -0.390  2.00 10.00           O
+ATOM    160  O   GLY D 157       0.561   0.009   0.110  2.00 10.00           O
+ATOM    161  O   GLY D 158       0.043   0.213  -0.281  2.00 10.00           O
+ATOM    162  O   GLY D 159      -0.452  -0.530  -0.513  2.00 10.00           O
+ATOM    163  O   GLY D 160       0.520   1.031   0.753  2.00 10.00           O
+ATOM    164  O   GLY D 161       0.827  -0.265   0.518  2.00 10.00           O
+ATOM    165  O   GLY D 162      -0.723  -1.044   1.093  2.00 10.00           O
+ATOM    166  O   GLY D 163      -0.024   0.230  -0.041  2.00 10.00           O
+ATOM    167  O   GLY D 164      -0.103   0.015  -0.231  2.00 10.00           O
+ATOM    168  O   GLY D 165      -0.358  -0.081  -0.104  2.00 10.00           O
+ATOM    169  O   GLY D 166      -0.376  -0.063  -0.187  2.00 10.00           O
+ATOM    170  O   GLY D 167      -0.032  -0.156  -0.210  2.00 10.00           O
+TER     171      GLY D 167
+CONECT  149  150
+CONECT  150  149  151
+CONECT  151  150  152
+CONECT  152  151  153
+CONECT  153  152  154
+CONECT  154  153  155
+CONECT  155  154  156
+CONECT  156  155  157
+CONECT  157  156  158
+CONECT  158  157  159
+CONECT  159  158  160
+CONECT  160  159  161
+CONECT  161  160  162
+CONECT  162  161  163
+CONECT  163  162  164
+CONECT  164  163  165
+CONECT  165  164  166
+CONECT  166  165  167
+CONECT  167  166  168
+CONECT  168  167  169
+CONECT  169  168  170
+CONECT  170  169
+END

@@ -1,0 +1,16 @@
+HEADER    CHROMOSOMES                             26-Sep-23   CMB1
+TITLE     CHROMOSOME CONFORMATION INFERED FROM sST DATA
+ATOM    658  O   GLY g 620      -0.079  -0.081   0.059  2.00 10.00           O
+ATOM    659  O   GLY g 621      -0.002  -0.135   0.115  2.00 10.00           O
+ATOM    660  O   GLY g 622      -0.241   0.270   0.059  2.00 10.00           O
+ATOM    661  O   GLY g 623      -0.114   0.130  -0.093  2.00 10.00           O
+ATOM    662  O   GLY g 624      -0.054  -0.158   0.319  2.00 10.00           O
+ATOM    663  O   GLY g 625      -0.082   0.040   0.073  2.00 10.00           O
+TER     664      GLY g 625
+CONECT  658  659
+CONECT  659  658  660
+CONECT  660  659  661
+CONECT  661  660  662
+CONECT  662  661  663
+CONECT  663  662
+END

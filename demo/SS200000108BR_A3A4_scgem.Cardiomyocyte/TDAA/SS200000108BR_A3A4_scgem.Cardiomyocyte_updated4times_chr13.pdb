@@ -1,0 +1,48 @@
+HEADER    CHROMOSOMES                             26-Sep-23   CMB1
+TITLE     CHROMOSOME CONFORMATION INFERED FROM sST DATA
+ATOM    172  O   GLY E 168      -0.514  -0.221  -0.073  2.00 10.00           O
+ATOM    173  O   GLY E 169       0.113  -0.240   0.189  2.00 10.00           O
+ATOM    174  O   GLY E 170      -0.067  -0.037  -0.374  2.00 10.00           O
+ATOM    175  O   GLY E 171       1.401  -1.488   1.372  2.00 10.00           O
+ATOM    176  O   GLY E 172      -0.048   0.089  -0.017  2.00 10.00           O
+ATOM    177  O   GLY E 173      -0.631   0.561  -1.095  2.00 10.00           O
+ATOM    178  O   GLY E 174       0.185  -0.045  -0.104  2.00 10.00           O
+ATOM    179  O   GLY E 175      -0.140   0.071   0.601  2.00 10.00           O
+ATOM    180  O   GLY E 176       0.320   0.053   0.445  2.00 10.00           O
+ATOM    181  O   GLY E 177       0.404   0.480   0.495  2.00 10.00           O
+ATOM    182  O   GLY E 178       0.295   0.404  -0.557  2.00 10.00           O
+ATOM    183  O   GLY E 179      -0.249   0.174   0.317  2.00 10.00           O
+ATOM    184  O   GLY E 180      -0.177   0.361   0.773  2.00 10.00           O
+ATOM    185  O   GLY E 181       0.128  -0.002   0.172  2.00 10.00           O
+ATOM    186  O   GLY E 182       0.359   0.060  -0.397  2.00 10.00           O
+ATOM    187  O   GLY E 183      -0.137   0.181   0.252  2.00 10.00           O
+ATOM    188  O   GLY E 184       0.196   0.099  -0.200  2.00 10.00           O
+ATOM    189  O   GLY E 185       0.425   0.308  -0.195  2.00 10.00           O
+ATOM    190  O   GLY E 186       0.223  -0.016   0.101  2.00 10.00           O
+ATOM    191  O   GLY E 187       1.222  -1.609   0.906  2.00 10.00           O
+ATOM    192  O   GLY E 188       0.439   0.311   0.308  2.00 10.00           O
+ATOM    193  O   GLY E 189       0.110  -0.016  -0.386  2.00 10.00           O
+TER     194      GLY E 189
+CONECT  172  173
+CONECT  173  172  174
+CONECT  174  173  175
+CONECT  175  174  176
+CONECT  176  175  177
+CONECT  177  176  178
+CONECT  178  177  179
+CONECT  179  178  180
+CONECT  180  179  181
+CONECT  181  180  182
+CONECT  182  181  183
+CONECT  183  182  184
+CONECT  184  183  185
+CONECT  185  184  186
+CONECT  186  185  187
+CONECT  187  186  188
+CONECT  188  187  189
+CONECT  189  188  190
+CONECT  190  189  191
+CONECT  191  190  192
+CONECT  192  191  193
+CONECT  193  192
+END

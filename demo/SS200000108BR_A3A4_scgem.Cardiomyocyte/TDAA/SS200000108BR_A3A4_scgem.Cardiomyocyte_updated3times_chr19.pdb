@@ -1,0 +1,36 @@
+HEADER    CHROMOSOMES                             26-Sep-23   CMB1
+TITLE     CHROMOSOME CONFORMATION INFERED FROM sST DATA
+ATOM    318  O   GLY K 308      -0.024   0.301  -0.181  2.00 10.00           O
+ATOM    319  O   GLY K 309       0.114  -0.138  -1.033  2.00 10.00           O
+ATOM    320  O   GLY K 310      -0.269  -0.117  -0.001  2.00 10.00           O
+ATOM    321  O   GLY K 311      -0.167   0.090  -0.724  2.00 10.00           O
+ATOM    322  O   GLY K 312       1.288  -0.956   1.826  2.00 10.00           O
+ATOM    323  O   GLY K 313      -0.305  -0.150  -0.029  2.00 10.00           O
+ATOM    324  O   GLY K 314      -0.008   0.580   0.824  2.00 10.00           O
+ATOM    325  O   GLY K 315      -0.066  -0.113  -0.058  2.00 10.00           O
+ATOM    326  O   GLY K 316      -0.061   0.317   0.464  2.00 10.00           O
+ATOM    327  O   GLY K 317       0.022  -0.033   0.301  2.00 10.00           O
+ATOM    328  O   GLY K 318       2.731  -0.770   2.424  2.00 10.00           O
+ATOM    329  O   GLY K 319      -0.244  -0.417  -0.215  2.00 10.00           O
+ATOM    330  O   GLY K 320      -0.066  -0.352   0.297  2.00 10.00           O
+ATOM    331  O   GLY K 321       0.264   0.032  -0.067  2.00 10.00           O
+ATOM    332  O   GLY K 322      -0.032  -0.219  -0.150  2.00 10.00           O
+ATOM    333  O   GLY K 323      -0.801   0.418   0.579  2.00 10.00           O
+TER     334      GLY K 323
+CONECT  318  319
+CONECT  319  318  320
+CONECT  320  319  321
+CONECT  321  320  322
+CONECT  322  321  323
+CONECT  323  322  324
+CONECT  324  323  325
+CONECT  325  324  326
+CONECT  326  325  327
+CONECT  327  326  328
+CONECT  328  327  329
+CONECT  329  328  330
+CONECT  330  329  331
+CONECT  331  330  332
+CONECT  332  331  333
+CONECT  333  332
+END
