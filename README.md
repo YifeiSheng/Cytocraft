@@ -30,9 +30,7 @@ REST3d_gem_argv.v0.3.py [-h] [-p PERCENT] [-l LOOP] [-m MAXDIST] [-c CELLTYPE] [
 
   -l LOOP, --loop LOOP  `Cluster loops, default: 6`
 
-  -m MAXDIST, --maxdist MAXDIST
-
-                        `max dist of clustering for umap embedding, default: 0.15`
+  -m MAXDIST, --maxdist MAXDIST  `max dist of clustering for umap embedding, default: 0.15`
 
   -c CELLTYPE, --celltype CELLTYPE  `Path of file containing cell types`
 
