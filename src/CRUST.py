@@ -93,24 +93,6 @@ def DeriveRotation(W, X, Mask):
     return Rotation
 
 
-def change_last_true(arr):
-    # Find the index of the last True value
-    last_true_index = np.where(arr == True)[0][-1]
-
-    # Set the value at that index to False
-    arr[last_true_index] = False
-
-    return arr
-
-
-def find_subarray(arr1, arr2):
-    n = arr1.shape[0]
-    for i in range(n):
-        if np.array_equal(arr1[i], arr2):
-            return i
-    return print("Error! Try to reduce Ngene in MASK function")
-
-
 def UpdateX(RM, W):
     F = int(W.shape[0] / 2)
     for j in range(W.shape[1]):
@@ -155,16 +137,6 @@ def UpdateX(RM, W):
             newX = np.array([newXi])
 
     return newX
-
-
-def transformer(array, vector, scale=1, axis=0):
-    result = np.empty_like(array)
-    for i in range(array.shape[axis]):
-        if axis == 0:
-            result[i, :] = (array[i, :] + vector) * scale
-        elif axis == 1:
-            result[:, i] = (array[:, i] + vector) * scale
-    return result
 
 
 def numpy_svd_rmsd_rot(in_crds1, in_crds2):
@@ -218,17 +190,6 @@ def normalizeW(W):
     for i in range(int(W.shape[0])):
         result[i] = W[i] - np.nanmean(W[i])
     return result
-
-
-def get_date_today():
-    from datetime import datetime
-
-    # get the current date as a datetime object
-    today = datetime.today()
-    # format the date as DD-MM-YY
-    date_string = today.strftime("%d-%b-%y")
-    # print the date string
-    return date_string
 
 
 def write_pdb(show_X, genechr, geneLst, write_path, sp, seed, prefix="chain"):
@@ -327,42 +288,6 @@ def write_pdb(show_X, genechr, geneLst, write_path, sp, seed, prefix="chain"):
         chain_idx += 1
 
 
-def load_data(file):
-    with open(file, "rb") as f:
-        x = pickle.load(f)
-    return x
-
-
-def save_data(data, file):
-    with open(file, "wb") as f:
-        pickle.dump(data, f)
-
-
-def generate_id():
-    return "".join(random.choices(string.ascii_uppercase + string.digits, k=4))
-
-
-def legalname(string):
-    import re
-
-    # Replace spaces with underscores
-    string = re.sub(r"\s+", "_", string)
-
-    # Remove non-alphanumeric characters
-    string = re.sub(r"[^a-zA-Z0-9_\-\.]", "", string)
-
-    # Remove leading/trailing underscores
-    string = re.sub(r"^_+|_+$", "", string)
-
-    # Remove leading/trailing hyphens
-    string = re.sub(r"^-+|-+$", "", string)
-
-    # Remove leading/trailing periods
-    string = re.sub(r"^\.+|\.+$", "", string)
-
-    return string
-
-
 def read_gem_as_csv(path):
     # from collections import defaultdict
 
@@ -397,147 +322,11 @@ def read_gem_as_csv(path):
     return gem
 
 
-def cluster(adata, clusterloops, maxdist=0.1):
-    cluster = {}
-    key = 0
-
-    for _ in range(clusterloops):
-        embedding = pd.DataFrame(adata.obsm["X_umap"], index=adata.obs_names)
-        while embedding.shape[0]:
-            center = embedding.sample()
-            cluster[key] = np.array([])
-            for idx, row in embedding.iterrows():
-                vec_center = center.values
-                vec_target = row.values
-                d = np.linalg.norm(vec_center - vec_target)
-                if d < maxdist:
-                    cluster[key] = np.append(cluster[key], idx)
-                    embedding = embedding.drop(idx)
-            # print("Number of cells remaining:" + str(embedding.shape[0]))
-            key += 1
-
-    cluster_f = {key: cellids for key, cellids in cluster.items() if len(cellids) >= 3}
-
-    print("Created " + str(len(cluster_f.keys())) + " near-neighbor cell groups")
-
-    if len(cluster_f.keys()) < 100:
-        warnings.warn(
-            "Not enough near-neighbor cell groups. Suggest increasing the number of clustering loops. ",
-            FutureWarning,
-        )
-
-    return cluster_f
-
-
-def creat_models(cluster, gem, GeneUIDs):
-    # init
-    models = []
-
-    ### creating models
-    GeneDic = {}
-    k = 0
-    for i in cluster.keys():
-        CellIDs = cluster[i]
-        if CellIDs.size < 4:
-            # print("Insufficient number of neighbors in the cluster")
-            continue
-
-        # compute gene distribution for every cell (W[i][n]); i for cell and n for gene
-        W = genedistribution(gem, CellIDs, GeneUIDs)
-        W = normalizeW(W)
-        W_new = W[:, ~np.isnan(W).any(axis=0)]
-        GeneUIDs_new = GeneUIDs[~np.isnan(W).any(axis=0)]
-
-        if GeneUIDs_new.size > 4:
-            try:
-                inferred_model = factor(W_new)
-                models.append(inferred_model)
-                GeneDic[k] = GeneUIDs_new
-                k += 1
-                # print("model appended")
-            except (np.linalg.LinAlgError, ValueError):
-                pass
-        else:
-            # print("Insufficient number of common gene shared by neighbors")
-            pass
-
-    print("Created " + str(len(models)) + " models")
-
-    return models, GeneDic
-
-
-def assemble_models(models, GeneDic, Conf_sorted, init_index=0):
-    Conf_sorted_index = Conf_sorted.index
-    iidx = Conf_sorted_index[init_index]
-    Conf_sorted_index = Conf_sorted_index.delete(init_index)
-    igidx = GeneDic[iidx].index
-    shape_iidx = models[iidx].Ss[0]
-    signal = 0
-    while signal < Conf_sorted_index.size:
-        # print("Gene appended: " + str(shape_iidx.shape[1]))
-        targetidx = Conf_sorted_index[0]
-        Conf_sorted_index = Conf_sorted_index.delete(0)
-        Geneset0 = igidx
-        Geneset1 = GeneDic[targetidx].index
-        Commonset = Geneset0.intersection(Geneset1)
-        Common_idx0 = Geneset0.isin(Commonset)
-        Common_idx1 = Geneset1.isin(Commonset)
-        if len(Commonset) > 3:
-            # print("appending model " + str(Conf_sorted_index[i]))
-            # Alignment of common structure
-            normed_shape0, T0 = normalizeX(shape_iidx[:, Common_idx0].T)
-            normed_shape1, T1 = normalizeX(models[targetidx].Ss[0][:, Common_idx1].T)
-            _, RM, is_reflection = numpy_svd_rmsd_rot(normed_shape0, normed_shape1)
-            if is_reflection:
-                models[targetidx].Ss[0][2, :] = np.flip(
-                    models[targetidx].Ss[0][2, :], axis=0
-                )
-                normed_shape1[:, 2] = np.flip(normed_shape1[:, 2], axis=0)
-                _, RM, _ = numpy_svd_rmsd_rot(normed_shape0, normed_shape1)
-            rotated_normed_shape1 = np.dot(normed_shape1, RM)
-            conf0 = models[iidx].W.shape[0] / models[iidx].W.shape[1]
-            conf1 = models[targetidx].W.shape[0] / models[targetidx].W.shape[1]
-            sumconf = conf0 + conf1
-            shared_shape = (
-                normed_shape0 * conf0 / sumconf
-                + rotated_normed_shape1 * conf1 / sumconf
-            )
-            shape_iidx = np.concatenate(
-                [
-                    shared_shape.T,
-                    transformer(shape_iidx[:, ~Common_idx0].T, T0, axis=0).T,
-                    np.dot(
-                        transformer(
-                            models[targetidx].Ss[0][:, ~Common_idx1].T, T1, axis=0
-                        ),
-                        RM,
-                    ).T,
-                ],
-                axis=1,
-            )
-            # Recording of normalized shape
-            shape_iidx = normalizeX(shape_iidx.T)[0].T
-            # Recording of gene indexes
-            igidx = Commonset.append(Geneset0[~Common_idx0]).append(
-                Geneset1[~Common_idx1]
-            )
-            signal = 0
-        else:
-            Conf_sorted_index = Conf_sorted_index.append(
-                pd.Index(np.array([targetidx]))
-            )
-            signal += 1
-
-    return shape_iidx, igidx
-
-
 def ReST3D(
     gem_path,
     species,
     seed,
     percent_of_gene_for_rotation_derivation,
-    clusterloops,
-    maxdist,
     out_path,
 ):
     #################### INIT ####################
@@ -589,12 +378,6 @@ def ReST3D(
         + "Proportion of genes used for Rotation Derivation: "
         + str(percent_of_gene_for_rotation_derivation)
         + "\n"
-        + "Number of repetitions of clustering: "
-        + str(clusterloops)
-        + "\n"
-        + "Upper limit of distance to neighbors in UMAP: "
-        + str(maxdist)
-        + "\n"
         + "Task ID: "
         + TID
         + "\n"
@@ -602,55 +385,6 @@ def ReST3D(
     Ngene_for_rotation_derivation = int(
         percent_of_gene_for_rotation_derivation * len(GeneUIDs)
     )
-
-    ### umap
-    data = read_gem(file_path=gem_path, bin_type="cell_bins")
-    data.tl.raw_checkpoint()
-    adata = stereo_to_anndata(
-        data, flavor="scanpy", sample_id="sample", reindex=False, output=None
-    )
-    sc.pp.neighbors(
-        adata,
-        method="umap",
-        metric="euclidean",
-        n_neighbors=10,
-        n_pcs=None,
-        use_rep="X",
-    )
-    sc.tl.umap(adata)
-
-    ### clustering
-    clusters = cluster(adata, clusterloops, maxdist)
-    ### creating models
-    models, genes_in_models = creat_models(clusters, gem, GeneUIDs)
-    if len(models) == 0:
-        return "No Model Created"
-    elif len(models) < 20:
-        warnings.warn(
-            "Not enough models. Suggest reducing the maximum distance or increasing the number of clustering loops.",
-            FutureWarning,
-        )
-
-    ### sorting models
-    Conf = pd.Series(dtype="float64")
-    for i in range(len(models)):
-        score = pd.Series([models[i].W.shape[0] / models[i].W.shape[1]])
-        Conf = pd.concat([Conf, score], ignore_index=True)
-    Conf_sorted = Conf.sort_values(ascending=False)
-    # Conf_sorted = Conf_sorted[Conf_sorted >= 1]
-
-    ### assemble models
-    init_idx = 0
-    igidx = []
-    while init_idx < len(Conf_sorted.index):
-        shape_iidx_tmp, igidx_tmp = assemble_models(
-            models, genes_in_models, Conf_sorted, init_index=init_idx
-        )
-        init_idx += 1
-        print(len(igidx_tmp))
-        if len(igidx_tmp) > len(igidx):
-            shape_iidx = shape_iidx_tmp
-            igidx = igidx_tmp
 
     ### processing gtf
     if species == "Mouse" or species == "Mice":
@@ -688,7 +422,7 @@ def ReST3D(
     write_pdb(
         shape_iidx.T,
         gene_chr,
-        list(GeneUIDs[igidx]),
+        list(GeneUIDs),
         write_path=outpath,
         sp=species,
         seed=seed,
@@ -696,14 +430,14 @@ def ReST3D(
     )
 
     # ##### update X
-    W = genedistribution(gem, CellUIDs.values, GeneUIDs[igidx].values)
+    W = genedistribution(gem, CellUIDs.values, GeneUIDs.values)
     W = normalizeW(W)
 
     rawX = shape_iidx.T
     X, _ = normalizeX(rawX)
     Mask = MASK(
         gem,
-        GeneIDs=GeneUIDs[igidx].values,
+        GeneIDs=GeneUIDs.values,
         CellIDs=CellUIDs,
         Ngene=Ngene_for_rotation_derivation,
     )
@@ -725,7 +459,7 @@ def ReST3D(
         write_pdb(
             newX,
             gene_chr,
-            list(GeneUIDs[igidx]),
+            list(GeneUIDs),
             write_path=outpath,
             sp=species,
             seed=seed,
@@ -739,8 +473,13 @@ def ReST3D(
             break
 
     #################### SAVING #####################
+    data = read_gem(file_path=gem_path, bin_type="cell_bins")
+    data.tl.raw_checkpoint()
+    adata = stereo_to_anndata(
+        data, flavor="scanpy", sample_id="sample", reindex=False, output=None
+    )
     adata.obsm["Rotation"] = RM
-    adata.uns["X"] = pd.DataFrame(X, index=GeneUIDs[igidx].values)
+    adata.uns["X"] = pd.DataFrame(X, index=GeneUIDs.values)
     adata.uns["X"].columns = adata.uns["X"].columns.astype(str)
     adata.uns["W"] = W
     adata.write_h5ad(filename=outpath + "adata.h5ad")
@@ -776,16 +515,7 @@ def parse_args():
         help="percent of gene for rotation derivation, default: 0.001",
         default=0.001,
     )
-    parser.add_argument(
-        "-l", "--loop", type=int, help="Cluster loops, default: 6", default=6
-    )
-    parser.add_argument(
-        "-m",
-        "--maxdist",
-        type=float,
-        help="max dist of clustering for umap embedding, default: 0.15",
-        default=0.15,
-    )
+
     parser.add_argument(
         "-c",
         "--celltype",
@@ -839,8 +569,6 @@ def main():
                     args.species,
                     seed,
                     args.percent,
-                    args.loop,
-                    args.maxdist,
                     args.out_path + "/" + ct_legal + "/",
                 )
             except IndexError:
@@ -852,8 +580,6 @@ def main():
             args.species,
             seed,
             args.percent,
-            args.loop,
-            args.maxdist,
             args.out_path,
         )
 
