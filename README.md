@@ -1,3 +1,7 @@
+<p align="center">
+	<img width="712" height="342" src=https://github.com/YifeiSheng/CRUST/blob/main/figure/Figure1.png>
+</p>
+
 # CRUST (Conformation Reconstruction Using Spatial Transcriptomics)
 
 The CRUST package provides prediction of chromosome conformation based on spatial transcriptomic.
