@@ -1,0 +1,16 @@
+seed: 100
+noise: 1
+TASK ID: FQ1Z
+Cell Number: 1500
+Gene Number: 100
+Gene Number for Rotation Derivatives: 10
+rateCap: 0.3
+rateDrop: 0.2
+resolution: 40
+mode: head
+
+Distance between ground truth and reconstructed structure for loop 1 is: 0.07521959230411925 and 0.08108878918030876
+Distance between ground truth and reconstructed structure for loop 2 is: 0.029858934352430706 and 0.06375632085029456
+Distance between ground truth and reconstructed structure for loop 3 is: 0.0007327101546506501 and 0.08625650586204252
+Distance          	Pearson           	Spearman
+0.0007327101546506501	0.9997549677909183	0.999909338273748
