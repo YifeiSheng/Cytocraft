@@ -862,7 +862,6 @@ def read_gem(file_path, sep="\t", bin_type="cell_bins", bin_size=100, is_sparse=
         sep=sep,
         comment="#",
         header=0,
-        dtype=str,
         converters={
             "x": int,
             "y": int,

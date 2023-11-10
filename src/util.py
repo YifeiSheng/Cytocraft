@@ -1,6 +1,7 @@
 """Utility functions."""
 
 import numpy as np
+import random, pickle
 
 
 def vec(X, order="F"):
@@ -139,68 +140,3 @@ def normed(x, axis=-1):
     shape[axis] = 1
     shape = tuple(shape)
     return x / norm(x, axis=axis).reshape(shape)
-
-
-def change_last_true(arr):
-    # Find the index of the last True value
-    last_true_index = np.where(arr == True)[0][-1]
-
-    # Set the value at that index to False
-    arr[last_true_index] = False
-
-    return arr
-
-
-def find_subarray(arr1, arr2):
-    n = arr1.shape[0]
-    for i in range(n):
-        if np.array_equal(arr1[i], arr2):
-            return i
-    return print("Error! Try to reduce Ngene in MASK function")
-
-
-def get_date_today():
-    from datetime import datetime
-
-    # get the current date as a datetime object
-    today = datetime.today()
-    # format the date as DD-MM-YY
-    date_string = today.strftime("%d-%b-%y")
-    # print the date string
-    return date_string
-
-
-def load_data(file):
-    with open(file, "rb") as f:
-        x = pickle.load(f)
-    return x
-
-
-def save_data(data, file):
-    with open(file, "wb") as f:
-        pickle.dump(data, f)
-
-
-def generate_id():
-    return "".join(random.choices(string.ascii_uppercase + string.digits, k=4))
-
-
-def legalname(string):
-    import re
-
-    # Replace spaces with underscores
-    string = re.sub(r"\s+", "_", string)
-
-    # Remove non-alphanumeric characters
-    string = re.sub(r"[^a-zA-Z0-9_\-\.]", "", string)
-
-    # Remove leading/trailing underscores
-    string = re.sub(r"^_+|_+$", "", string)
-
-    # Remove leading/trailing hyphens
-    string = re.sub(r"^-+|-+$", "", string)
-
-    # Remove leading/trailing periods
-    string = re.sub(r"^\.+|\.+$", "", string)
-
-    return string

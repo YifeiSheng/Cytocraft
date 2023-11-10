@@ -3,19 +3,13 @@ import numpy as np
 import pandas as pd
 import scanpy as sc
 import model, util
-
-# from scipy.sparse import spmatrix, issparse, csr_matrix
-# from anndata import AnnData
-# from typing import Optional, Union
-# from shapely.geometry import Point, MultiPoint
 from tqdm import tqdm
 from pathlib import Path
 from scipy import linalg as LA
-
-# from numpy.linalg import svd, solve, lstsq
-# from model import BasisShapeModel
+from scipy.spatial.transform import Rotation as R
 from stereopy import *
 from rigid import *
+import util
 
 
 """
@@ -52,7 +46,7 @@ def genedistribution(gem, CellIDs, TopGenes):
 
 
 def MASK(gem, GeneIDs, CellIDs, Ngene):
-    mask = np.zeros((CellIDs.size, GeneIDs.size))
+    mask = np.zeros((CellIDs.size, len(GeneIDs)))
     i = 0
     for c in CellIDs:
         gem_cell = gem[gem.CellID == c]
@@ -93,8 +87,9 @@ def DeriveRotation(W, X, Mask):
     return Rotation
 
 
-def UpdateX(RM, W):
+def UpdateX(RM, W, GeneUID, *X_old):
     F = int(W.shape[0] / 2)
+    pop_indices = []
     for j in range(W.shape[1]):
         a1 = b1 = c1 = d1 = a2 = b2 = c2 = d2 = a3 = b3 = c3 = d3 = 0
         for i in range(F):
@@ -122,21 +117,33 @@ def UpdateX(RM, W):
 
         args = np.array([[a1, b1, c1], [a2, b2, c2], [a3, b3, c3]])
         results = np.array([d1, d2, d3])
-        newXi = LA.solve(args, results)
-        # print(j)
-        # print(args)
-        # print(results)
-        # print(newXi)
         try:
-            newX = np.append(
-                newX,
-                [newXi],
-                axis=0,
-            )
-        except NameError:
-            newX = np.array([newXi])
+            newXi = LA.solve(args, results)
+            try:
+                newX = np.append(
+                    newX,
+                    [newXi],
+                    axis=0,
+                )
+            except NameError:
+                newX = np.array([newXi])
+        except np.linalg.LinAlgError or LinAlgWarning:
+            pop_indices.append(j)
 
-    return newX
+    # Drop genes
+    ## X_old also need to drop genes, so that Xs can be compared
+    if X_old:
+        X_old = X_old[0]
+        for i in sorted(pop_indices, reverse=True):
+            del GeneUID[i]
+            W = np.delete(W, obj=i, axis=1)
+            X_old = np.delete(X_old, obj=i, axis=0)
+        return newX, W, GeneUID, X_old
+    else:
+        for i in sorted(pop_indices, reverse=True):
+            del GeneUID[i]
+            W = np.delete(W, obj=i, axis=1)
+        return newX, W, GeneUID
 
 
 def numpy_svd_rmsd_rot(in_crds1, in_crds2):
@@ -192,6 +199,48 @@ def normalizeW(W):
     return result
 
 
+def filterGenes(array, Genes, threshold):
+    # threshold is a float between 0 and 1, indicating the maximum proportion of np.nans allowed in a column
+    # returns a new array with only the columns that have less than threshold proportion of np.nans
+    # if array is empty or threshold is invalid, returns None
+
+    # check if array is empty
+    if array.size == 0:
+        return None
+
+    # check if threshold is valid
+    if not (0 <= threshold <= 1):
+        return None
+
+    # get the number of rows and columns in the array
+    rows, cols = array.shape
+
+    # create a list to store the indices of the columns to keep
+    keep_cols = []
+
+    # loop through each column
+    for i in range(cols):
+        # get the column as a 1D array
+        col = array[:, i]
+
+        # count the number of np.nans in the column
+        nan_count = np.count_nonzero(np.isnan(col))
+
+        # calculate the proportion of np.nans in the column
+        nan_prop = nan_count / rows
+
+        # if the proportion is less than the threshold, add the index to the list
+        if nan_prop < threshold:
+            keep_cols.append(i)
+
+    # create a new array with only the columns in the list
+    new_array = array[:, keep_cols]
+    Genes = list(np.array(Genes)[keep_cols])
+
+    # return the new array
+    return new_array, Genes
+
+
 def write_pdb(show_X, genechr, geneLst, write_path, sp, seed, prefix="chain"):
     if sp == "Axolotls":
         uniquechains = [
@@ -213,7 +262,7 @@ def write_pdb(show_X, genechr, geneLst, write_path, sp, seed, prefix="chain"):
             + "CHROMOSOMES".ljust(40, " ")
             + get_date_today()
             + "   "
-            + seed.ljust(4, " ")
+            + str(seed).ljust(4, " ")
             + "\n"
         )
         out.writelines(
@@ -295,7 +344,6 @@ def read_gem_as_csv(path):
         path,
         sep="\t",
         comment="#",
-        dtype=str,
         converters={
             "x": int,
             "y": int,
@@ -320,6 +368,80 @@ def read_gem_as_csv(path):
         gem.rename(columns={"gene": "geneID"}, inplace=True)
 
     return gem
+
+
+def change_last_true(arr):
+    # Find the index of the last True value
+    last_true_index = np.where(arr == True)[0][-1]
+
+    # Set the value at that index to False
+    arr[last_true_index] = False
+
+    return arr
+
+
+def find_subarray(arr1, arr2):
+    n = arr1.shape[0]
+    for i in range(n):
+        if np.array_equal(arr1[i], arr2):
+            return i
+    return print("Error! Try to reduce Ngene in MASK function")
+
+
+def generate_random_rotation_matrices(n):
+    # use the Rotation.random method to generate n random rotations
+    rotations = R.random(n)
+    # convert the rotations to matrices
+    matrices = rotations.as_matrix()
+    # return the matrices
+    return matrices
+
+
+def get_date_today():
+    from datetime import datetime
+
+    # get the current date as a datetime object
+    today = datetime.today()
+    # format the date as DD-MM-YY
+    date_string = today.strftime("%d-%b-%y")
+    # print the date string
+    return date_string
+
+
+def load_data(file):
+    with open(file, "rb") as f:
+        x = pickle.load(f)
+    return x
+
+
+def save_data(data, file):
+    with open(file, "wb") as f:
+        pickle.dump(data, f)
+
+
+def generate_id():
+    return "".join(random.choices(string.ascii_uppercase + string.digits, k=4))
+
+
+def legalname(string):
+    import re
+
+    # Replace spaces with underscores
+    string = re.sub(r"\s+", "_", string)
+
+    # Remove non-alphanumeric characters
+    string = re.sub(r"[^a-zA-Z0-9_\-\.]", "", string)
+
+    # Remove leading/trailing underscores
+    string = re.sub(r"^_+|_+$", "", string)
+
+    # Remove leading/trailing hyphens
+    string = re.sub(r"^-+|-+$", "", string)
+
+    # Remove leading/trailing periods
+    string = re.sub(r"^\.+|\.+$", "", string)
+
+    return string
 
 
 def ReST3D(
@@ -347,7 +469,7 @@ def ReST3D(
     # read input gem
     gem = read_gem_as_csv(gem_path)
 
-    GeneUIDs = (
+    GeneUIDs = list(
         gem.groupby(["geneID"])["MIDCount"]
         .count()
         .reset_index(name="Count")
@@ -418,68 +540,63 @@ def ReST3D(
                         print("IndexError")
                         pass
 
-    ### write .pdb file
+    ##### generate random RM and derive X
+    W = genedistribution(gem, CellUIDs.values, GeneUIDs)
+    W, GeneUIDs = filterGenes(W, GeneUIDs, threshold=0.9)
+    W = normalizeW(W)
+    RM = generate_random_rotation_matrices(int(W.shape[0] / 2))
+    X, W, GeneUIDs = UpdateX(RM, W, GeneUIDs)
     write_pdb(
-        shape_iidx.T,
+        X,
         gene_chr,
-        list(GeneUIDs),
+        GeneUIDs,
         write_path=outpath,
         sp=species,
         seed=seed,
-        prefix=SN + "_updated_asm_chr",
+        prefix=SN + "_initial_chr",
     )
-
-    # ##### update X
-    W = genedistribution(gem, CellUIDs.values, GeneUIDs.values)
-    W = normalizeW(W)
-
-    rawX = shape_iidx.T
-    X, _ = normalizeX(rawX)
-    Mask = MASK(
-        gem,
-        GeneIDs=GeneUIDs.values,
-        CellIDs=CellUIDs,
-        Ngene=Ngene_for_rotation_derivation,
-    )
-
-    loop = 1
-    while loop <= 30:
-        # get rotation R through shared X and input W
+    ##### update X
+    for loop in range(30):
+        # step1: derive Rotation Matrix
+        Mask = MASK(
+            gem,
+            GeneIDs=GeneUIDs,
+            CellIDs=CellUIDs,
+            Ngene=Ngene_for_rotation_derivation,
+        )
         RM = DeriveRotation(W, X, Mask)
-
-        # update X with R and W
+        # step2: update conformation X with RM and W
         try:
-            newX = UpdateX(RM, W)
+            newX, W, GeneUIDs, X = UpdateX(RM, W, GeneUIDs, X)
         except np.linalg.LinAlgError:
             return "numpy.linalg.LinAlgError"
         rmsd, _, _ = numpy_svd_rmsd_rot(
             X / np.linalg.norm(X), newX / np.linalg.norm(newX)
         )
-        print("Distance between X and newX is: " + str(rmsd))
+        print("Distance between X_new and X_old is: " + str(rmsd))
         write_pdb(
             newX,
             gene_chr,
-            list(GeneUIDs),
+            GeneUIDs,
             write_path=outpath,
             sp=species,
             seed=seed,
             prefix=SN + "_updated" + str(loop) + "times_chr",
         )
         ## keep looping until X converges
-        # count loops
-        loop += 1
         X = newX
-        if rmsd < 0.02:
+        if rmsd < 0.01:
             break
 
     #################### SAVING #####################
+    print("Number of total Transcription centers is: " + str(X.shape[0]))
     data = read_gem(file_path=gem_path, bin_type="cell_bins")
     data.tl.raw_checkpoint()
     adata = stereo_to_anndata(
         data, flavor="scanpy", sample_id="sample", reindex=False, output=None
     )
     adata.obsm["Rotation"] = RM
-    adata.uns["X"] = pd.DataFrame(X, index=GeneUIDs.values)
+    adata.uns["X"] = pd.DataFrame(X, index=GeneUIDs)
     adata.uns["X"].columns = adata.uns["X"].columns.astype(str)
     adata.uns["W"] = W
     adata.write_h5ad(filename=outpath + "adata.h5ad")
