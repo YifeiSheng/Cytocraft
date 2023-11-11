@@ -24,18 +24,20 @@ CRUST.py [-h] [-p PERCENT] [-c CELLTYPE] [--ctkey CTKEY] [--cikey CIKEY] [--seed
 
   out_path              `Output path to save results`
 
-  {Human,Mouse,Axolotls,Monkey} `Species of the input data, e.g. Human, Mouse`
+  {Human,Mouse,Axolotls,Monkey} `Species of the input data`
 
 ### optional arguments:
 
-  -h, --help            `show this help message and exit`
+  -h, --help     `show this help message and exit`
 
-  -p PERCENT, --percent PERCENT  `percent of gene for rotation derivation, default: 0.001`
+  -p, --percent  `percent of gene for rotation derivation, default: 0.001`
 
-  -c CELLTYPE, --celltype CELLTYPE  `Path of file containing cell types`
+  -t, --threshold  `The maximum proportion of np.nans allowed in a column(gene) in W, default: 0.90`
 
-  --ctkey CTKEY         `Key of celltype column in the cell type file`
+  -c, --celltype `Path of file containing cell types`
 
-  --cikey CIKEY         `Key of cell id column in the cell type file`
+  --ctkey `Key of celltype column in the cell type file`
 
-  --seed SEED           `Random seed`
+  --cikey `Key of cell id column in the cell type file`
+
+  --seed  `Random seed`

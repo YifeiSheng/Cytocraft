@@ -255,9 +255,10 @@ def write_pdb(show_X, genechr, geneLst, write_path, sp, seed, prefix="chain"):
     j = 1
     chain_idx = 0
     for chain in uniquechains:
+        k = 0
         show_shape = show_X.T
-        out = open(write_path + "/" + prefix + chain + ".pdb", "w")
-        out.writelines(
+        rows = []
+        rows.append(
             "HEADER".ljust(10, " ")
             + "CHROMOSOMES".ljust(40, " ")
             + get_date_today()
@@ -265,7 +266,7 @@ def write_pdb(show_X, genechr, geneLst, write_path, sp, seed, prefix="chain"):
             + str(seed).ljust(4, " ")
             + "\n"
         )
-        out.writelines(
+        rows.append(
             "TITLE".ljust(10, " ") + "CHROMOSOME CONFORMATION INFERED FROM sST DATA\n"
         )
         Is = []
@@ -273,7 +274,7 @@ def write_pdb(show_X, genechr, geneLst, write_path, sp, seed, prefix="chain"):
             if g in geneLst:
                 idx = geneLst.index(g)
                 # normal process
-                out.writelines(
+                rows.append(
                     "ATOM".ljust(6, " ")
                     + str(i).rjust(5, " ")
                     + "  "
@@ -296,8 +297,11 @@ def write_pdb(show_X, genechr, geneLst, write_path, sp, seed, prefix="chain"):
                 Is.append(i)
                 i += 1
                 j += 1
+                k += 1
+        if k == 0:
+            continue
         i += 1
-        out.writelines(
+        rows.append(
             "TER".ljust(6, " ")
             + str(i - 1).rjust(5, " ")
             + "  "
@@ -311,7 +315,7 @@ def write_pdb(show_X, genechr, geneLst, write_path, sp, seed, prefix="chain"):
         )
         for l in Is:
             if l - 1 in Is and l + 1 in Is:
-                out.writelines(
+                rows.append(
                     "CONECT".ljust(6, " ")
                     + str(l).rjust(5, " ")
                     + str(l - 1).rjust(5, " ")
@@ -319,20 +323,23 @@ def write_pdb(show_X, genechr, geneLst, write_path, sp, seed, prefix="chain"):
                     + "\n"
                 )
             elif not l - 1 in Is:
-                out.writelines(
+                rows.append(
                     "CONECT".ljust(6, " ")
                     + str(l).rjust(5, " ")
                     + str(l + 1).rjust(5, " ")
                     + "\n"
                 )
             elif not l + 1 in Is:
-                out.writelines(
+                rows.append(
                     "CONECT".ljust(6, " ")
                     + str(l).rjust(5, " ")
                     + str(l - 1).rjust(5, " ")
                     + "\n"
                 )
-        out.writelines("END\n")
+        rows.append("END\n")
+        out = open(write_path + "/" + prefix + chain + ".pdb", "wb", 100 * (2**20))
+        data = "".join(rows).encode()
+        out.write(data)
         out.close()
         chain_idx += 1
 
@@ -448,6 +455,7 @@ def ReST3D(
     gem_path,
     species,
     seed,
+    threshold_for_gene_filter,
     percent_of_gene_for_rotation_derivation,
     out_path,
 ):
@@ -497,7 +505,10 @@ def ReST3D(
         + "Sample Name: "
         + SN
         + "\n"
-        + "Proportion of genes used for Rotation Derivation: "
+        + "Threshold for gene filter is: "
+        + str(threshold_for_gene_filter)
+        + "\n"
+        + "Proportion of genes used for Rotation Derivation is: "
         + str(percent_of_gene_for_rotation_derivation)
         + "\n"
         + "Task ID: "
@@ -542,7 +553,7 @@ def ReST3D(
 
     ##### generate random RM and derive X
     W = genedistribution(gem, CellUIDs.values, GeneUIDs)
-    W, GeneUIDs = filterGenes(W, GeneUIDs, threshold=0.9)
+    W, GeneUIDs = filterGenes(W, GeneUIDs, threshold=threshold_for_gene_filter)
     W = normalizeW(W)
     RM = generate_random_rotation_matrices(int(W.shape[0] / 2))
     X, W, GeneUIDs = UpdateX(RM, W, GeneUIDs)
@@ -632,7 +643,13 @@ def parse_args():
         help="percent of gene for rotation derivation, default: 0.001",
         default=0.001,
     )
-
+    parser.add_argument(
+        "-t",
+        "--threshold",
+        type=float,
+        help="The maximum proportion of np.nans allowed in a column(gene) in W",
+        default=0.90,
+    )
     parser.add_argument(
         "-c",
         "--celltype",
@@ -685,6 +702,7 @@ def main():
                     gem_ct_path,
                     args.species,
                     seed,
+                    args.threshold,
                     args.percent,
                     args.out_path + "/" + ct_legal + "/",
                 )
@@ -696,6 +714,7 @@ def main():
             args.gem_path,
             args.species,
             seed,
+            args.threshold,
             args.percent,
             args.out_path,
         )
