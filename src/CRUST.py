@@ -63,9 +63,10 @@ def MASK(gem, GeneIDs, CellIDs, Ngene):
     return np.bool_(mask)
 
 
-def DeriveRotation(W, X, Mask):
+def DeriveRotation(W, X, Mask, CellUIDs):
     F = int(W.shape[0] / 2)
     Rotation = np.zeros((F, 3, 3))
+    pop_indices = []
     for i in range(F):
         # filter genes
         Wi = W[:, Mask[i, :]]
@@ -73,6 +74,7 @@ def DeriveRotation(W, X, Mask):
         Wi_filter = Wi[~np.isnan(Wi).any(axis=1), :]
         while Wi_filter.shape[0] < 6:
             Mask[i, :] = change_last_true(Mask[i, :])
+            # filter genes
             Wi = W[:, Mask[i, :]]
             # filter cells
             Wi_filter = Wi[~np.isnan(Wi).any(axis=1), :]
@@ -82,9 +84,15 @@ def DeriveRotation(W, X, Mask):
             model = factor(Wi_filter)
             _, R, _ = numpy_svd_rmsd_rot(np.dot(model.Rs[idx], model.Ss[0]).T, Xi)
             Rotation[i] = R
-        except ValueError:
-            pass
-    return Rotation
+        except Exception as err:
+            print("Cell No." + str(i + 1) + " is removed due to: ", err)
+            pop_indices.append(i)
+    for i in sorted(pop_indices, reverse=True):
+        Rotation = np.delete(Rotation, obj=i, axis=0)
+        W = np.delete(W, obj=i * 2 + 1, axis=0)
+        W = np.delete(W, obj=i * 2, axis=0)
+        del CellUIDs[i]
+    return Rotation, W, CellUIDs
 
 
 def UpdateX(RM, W, GeneUID, *X_old):
@@ -127,7 +135,8 @@ def UpdateX(RM, W, GeneUID, *X_old):
                 )
             except NameError:
                 newX = np.array([newXi])
-        except np.linalg.LinAlgError or LinAlgWarning:
+        except (np.linalg.LinAlgError, LA.LinAlgWarning) as err:
+            print("Gene No." + str(j + 1) + " is removed due to: ", err)
             pop_indices.append(j)
 
     # Drop genes
@@ -189,7 +198,7 @@ def normalizeX(X):
             result[:, i] = X[:, i] - np.nanmean(X[:, i])
         return result, tl
     else:
-        print("X shape error!")
+        print("ValueError: X shape is wrong.")
 
 
 def normalizeW(W):
@@ -351,15 +360,18 @@ def read_gem_as_csv(path):
         path,
         sep="\t",
         comment="#",
+        dtype=str,
         converters={
-            "x": int,
-            "y": int,
+            "x": float,
+            "y": float,
+            "cell_id": str,
             "MIDCount": float,
             "MIDCounts": float,
             "expr": float,
         },
     )
-
+    gem["x"] = gem["x"].astype(int)
+    gem["y"] = gem["y"].astype(int)
     # cell column
     if "cell" in gem.columns:
         gem.rename(columns={"cell": "CellID"}, inplace=True)
@@ -464,7 +476,7 @@ def ReST3D(
     filename, _ = os.path.splitext(gem_path)
     SN = os.path.basename(filename)
     TID = generate_id()
-    outpath = out_path + "/" + SN + "/" + TID + "/"
+    outpath = out_path + "/" + SN + "_" + TID + "/"
 
     # make dir
     Path(outpath).mkdir(parents=True, exist_ok=True)
@@ -555,6 +567,7 @@ def ReST3D(
     W = genedistribution(gem, CellUIDs.values, GeneUIDs)
     W, GeneUIDs = filterGenes(W, GeneUIDs, threshold=threshold_for_gene_filter)
     W = normalizeW(W)
+    # generate random Rotation Matrix
     RM = generate_random_rotation_matrices(int(W.shape[0] / 2))
     X, W, GeneUIDs = UpdateX(RM, W, GeneUIDs)
     write_pdb(
@@ -575,7 +588,7 @@ def ReST3D(
             CellIDs=CellUIDs,
             Ngene=Ngene_for_rotation_derivation,
         )
-        RM = DeriveRotation(W, X, Mask)
+        RM, W, CellUIDs = DeriveRotation(W, X, Mask, CellUIDs)
         # step2: update conformation X with RM and W
         try:
             newX, W, GeneUIDs, X = UpdateX(RM, W, GeneUIDs, X)
@@ -592,7 +605,7 @@ def ReST3D(
             write_path=outpath,
             sp=species,
             seed=seed,
-            prefix=SN + "_updated" + str(loop) + "times_chr",
+            prefix=SN + "_updated" + str(loop + 1) + "times_chr",
         )
         ## keep looping until X converges
         X = newX
@@ -704,11 +717,14 @@ def main():
                     seed,
                     args.threshold,
                     args.percent,
-                    args.out_path + "/" + ct_legal + "/",
+                    args.out_path,
                 )
-            except IndexError:
-                print("cell number of " + ct + " is not enough")
-                pass
+            except Exception as error:
+                print(error)
+                print(ct + ": conformation reconstruction failed.")
+                continue
+            else:
+                print(ct + ": conformation reconstruction finished.")
     else:
         ReST3D(
             args.gem_path,
