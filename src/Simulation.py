@@ -1,50 +1,13 @@
-import os, sys, string, random, pickle, copy, csv
-from pathlib import Path
-import numpy as np
-import pandas as pd
-import scanpy as sc
-from tqdm import tqdm
-from math import cos, sin
 from matplotlib import pyplot as plt
 import scipy.stats
 from scipy.sparse import spmatrix, issparse, csr_matrix
-from scipy import linalg as LA
 from scipy.stats import multivariate_normal
-from scipy.spatial.transform import Rotation as R
-import util
 from model import BasisShapeModel
 from anndata import AnnData
 from typing import Optional, Union
 from shapely.geometry import Point, MultiPoint
 from numpy.linalg import svd, solve, lstsq
-from stereopy import *
-from rigid import *
-
-
-def genedistribution(gem, CellIDs, TopGenes):
-    W = np.zeros((len(CellIDs) * 2, len(TopGenes)))
-    i = 0
-    for c in CellIDs:
-        j = 0
-        # subset the gem in terms of individual cells
-        gem_cell = gem[gem.CellID == c]
-        for n in TopGenes:
-            if n not in gem_cell.geneID.values:
-                x_median = np.nan
-                y_median = np.nan
-            else:
-                gem_cell_gene = gem_cell[gem_cell.geneID == n]
-                x_median = np.average(
-                    gem_cell_gene.x.values, weights=gem_cell_gene.MIDCount.values
-                )
-                y_median = np.average(
-                    gem_cell_gene.y.values, weights=gem_cell_gene.MIDCount.values
-                )
-            W[i * 2, j] = x_median
-            W[i * 2 + 1, j] = y_median
-            j += 1
-        i += 1
-    return W
+from CRUST import *
 
 
 def MASK(gem, GeneIDs, Ngene):
@@ -66,7 +29,7 @@ def MASK(gem, GeneIDs, Ngene):
     return np.bool_(mask)
 
 
-def DeriveRotation_v3(W, X, Mask):
+def DeriveRotation(W, X, Mask):
     F = int(W.shape[0] / 2)
     Rotation = np.zeros((F, 3, 3))
     # I = np.array([[1, 0, 0], [0, 1, 0], [0, 0, -1]])
@@ -83,45 +46,9 @@ def DeriveRotation_v3(W, X, Mask):
         idx = int(find_subarray(Wi_filter, Wi[i * 2]) / 2)
         Xi = X[Mask[i, :], :]
         model = factor(Wi_filter)
-        _, R, is_reflection = numpy_svd_rmsd_rot(
-            np.dot(model.Rs[idx], model.Ss[0]).T, Xi
-        )
-        # Ss_mirror = np.copy(model.Ss[0].T)
-        # Ss_mirror[:, 2] = np.flip(Ss_mirror[:, 2], axis=0)
-        # rmsd2, R2 = numpy_svd_rmsd_rot(Xi, Ss_mirror)
-        # if rmsd1 > rmsd2:
-        #    R = R2
-        # else:
-        #    R = R1
-        # print("R")
-        # print(R1)
-        # print(R2)
-        # print(rmsd1)
-        # print(rmsd2)
+        _, R, _ = numpy_svd_rmsd_rot(np.dot(model.Rs[idx], model.Ss[0]).T, Xi)
         Rotation[i] = R
-        # print(i)
-        # print(is_reflection)
-        # if is_reflection:
-        #     Rotation[i] = np.dot(np.dot(I, Rotation[i]), I)
     return Rotation
-
-
-def change_last_true(arr):
-    # Find the index of the last True value
-    last_true_index = np.where(arr == True)[0][-1]
-
-    # Set the value at that index to False
-    arr[last_true_index] = False
-
-    return arr
-
-
-def find_subarray(arr1, arr2):
-    n = arr1.shape[0]
-    for i in range(n):
-        if np.array_equal(arr1[i], arr2):
-            return i
-    return print("Error! Try to reduce Ngene in MASK function")
 
 
 def UpdateX(RM, W):
@@ -154,10 +81,6 @@ def UpdateX(RM, W):
         args = np.array([[a1, b1, c1], [a2, b2, c2], [a3, b3, c3]])
         results = np.array([d1, d2, d3])
         newXi = LA.solve(args, results)
-        # print(j)
-        # print(args)
-        # print(results)
-        # print(newXi)
         try:
             newX = np.append(
                 newX,
@@ -168,44 +91,6 @@ def UpdateX(RM, W):
             newX = np.array([newXi])
 
     return newX
-
-def numpy_svd_rmsd_rot(in_crds1, in_crds2):
-    """
-    Returns rmsd and optional rotation between 2 sets of [nx3] arrays.
-
-    This requires numpy for svd decomposition.
-    The transform direction: transform(m, ref_crd) => target_crd.
-    """
-
-    crds1 = np.array(in_crds1)
-    crds2 = np.array(in_crds2)
-    assert crds1.shape[1] == 3
-    assert crds1.shape == crds2.shape
-
-    n_vec = np.shape(crds1)[0]
-    correlation_matrix = np.dot(np.transpose(crds1), crds2)
-    v, s, w = np.linalg.svd(correlation_matrix)
-    is_reflection = (np.linalg.det(v) * np.linalg.det(w)) < 0.0
-
-    if is_reflection:
-        s[-1] = -s[-1]
-    E0 = sum(sum(crds1 * crds1)) + sum(sum(crds2 * crds2))
-    rmsd_sq = (E0 - 2.0 * sum(s)) / float(n_vec)
-    rmsd_sq = max([rmsd_sq, 0.0])
-    rmsd = np.sqrt(rmsd_sq)
-
-    if is_reflection:
-        v[-1, :] = -v[-1, :]
-    rot33 = np.dot(v, w).transpose()
-    # print(is_reflection)
-    return rmsd, rot33, is_reflection
-
-
-def normalizeW(W):
-    result = np.empty_like(W)
-    for i in range(int(W.shape[0])):
-        result[i] = W[i] - np.nanmean(W[i])
-    return result
 
 
 def write_sim_pdb(simX, prefix="simchain", outpath="./Results/"):
@@ -293,12 +178,6 @@ def write_sim_pdb(simX, prefix="simchain", outpath="./Results/"):
         out.write("END\n")
 
 
-def load_data(file):
-    with open(file, "rb") as f:
-        x = pickle.load(f)
-    return x
-
-
 def write_row_to_csv(filename, row):
     # open the file in append mode
     with open(filename, "a", newline="") as f:
@@ -331,6 +210,7 @@ def euclidean_distance_3d_matrix(X):
     # returns a numpy array of shape (len(coords), len(coords)) where the element at (i, j) is the distance between coords[i] and coords[j]
     n = X.shape[0]
     matrix = np.zeros((n, n))
+
     for i in range(n):
         for j in range(i + 1, n):
             x1, y1, z1 = X[i, :]
@@ -349,13 +229,7 @@ def distance_to_similarity(matrix):
     return similarity
 
 
-def save_data(data, file):
-    with open(file, "wb") as f:
-        pickle.dump(data, f)
-
-
-##### Functions
-def normalizeX(X):
+def centerX(X):
     """
     X = (nGene,3)
     """
@@ -367,68 +241,106 @@ def normalizeX(X):
         print("X shape error!")
 
 
-def generate_random_rotation_matrices(n):
-    # use the Rotation.random method to generate n random rotations
-    rotations = R.random(n)
-    # convert the rotations to matrices
-    matrices = rotations.as_matrix()
-    # return the matrices
-    return matrices
-
-
-def save_data(data, file):
-    with open(file, "wb") as f:
-        pickle.dump(data, f)
-
-
-def generate_id():
-    return "".join(random.choices(string.ascii_uppercase + string.digits, k=4))
-
-
 def main():
-    ##### SETTINGS
-    seed = int(sys.argv[11])
-    random.seed(seed)
-    np.random.seed(seed)
-    # HicCoords = np.loadtxt(sys.argv[1], delimiter="\t")
+    # Read auguments
     GenomeStructure = pd.read_csv(sys.argv[1], delimiter="\t")
-    sample_name = os.path.basename(sys.argv[1])
-    Ngene = int(sys.argv[2])
-    mode = sys.argv[12]
-    if mode == "head":
-        HicCoords = np.array(GenomeStructure[["x", "y", "z"]].head(Ngene))
-    elif mode == "random":
-        HicCoords = np.array(GenomeStructure[["x", "y", "z"]].sample(Ngene))
+    sample_name = os.path.basename(sys.argv[1]).split(".")[0]
+    Ngene = int(sys.argv[2])  ### simulated gene number
     Ncell = int(sys.argv[3])  ### simulated cell number
     rateCap = float(sys.argv[4])  ### set capture rate
     rateDrop = float(sys.argv[5])  ### set gene loss rate
     resolution = int(sys.argv[6])  ### difine the resolution
     Ngene_for_rotation_derivation = int(sys.argv[7])
     noise = int(sys.argv[8])
-    outpath = sys.argv[9]
-    # csv = "../Results/HEMC/SimulationResults.csv"
-    csv = sys.argv[10]
-    TID = generate_id()
-    outpath = outpath + "/" + TID
+    mode = sys.argv[9]
+    outpath = sys.argv[10]
+    csv = sys.argv[11]
+
+    # Define outpath
+    outpath = (
+        outpath
+        + "/"
+        + sample_name
+        + "_NG"
+        + str(Ngene)
+        + "_NC"
+        + str(Ncell)
+        + "_RC"
+        + str(rateCap)
+        + "_RD"
+        + str(rateDrop)
+        + "_RS"
+        + str(resolution)
+        + "_NGF"
+        + str(Ngene_for_rotation_derivation)
+        + "_NS"
+        + str(noise)
+        + "_"
+        + mode
+    )
+    # Exit if the experiment has been done
+    # result = pd.read_csv(csv, sep=",")
+    # repeats = result.query(
+    #     f"GeneNumber == {Ngene} and \\"
+    #     f"CellNumber == {Ncell} and \\"
+    #     f"CaptureRate == {rateCap} and \\"
+    #     f"DropRate == {rateDrop} and \\"
+    #     f"Resolution== {resolution} and \\"
+    #     f"NumberofGeneforFactorization == {Ngene_for_rotation_derivation} and \\"
+    #     f"Noise == {noise} and \\"
+    #     f"Mode == '%s'" % mode
+    # )
+    # if len(repeats) >= 10:
+    #     sys.exit(1)
     Path(outpath).mkdir(parents=True, exist_ok=True)
+    # Check the number of arguments and set random seed
+    if len(sys.argv) == 13:
+        # Try to convert the 12th argument to an integer
+        try:
+            seed = int(sys.argv[12])
+        except ValueError:
+            # If the argument is not a valid integer, print an error message and exit
+            print("Invalid seed argument. Please provide an integer.")
+            sys.exit(1)
+    elif len(sys.argv) == 12:
+        # If the argument is not given, generate a random seed
+        seed = random.randint(0, 1000000)
+    else:
+        print(
+            "Argument length is not correct, please check each parameter for correctness."
+        )
+        sys.exit(1)
+    random.seed(seed)
+    np.random.seed(seed)
+
+    if mode == "continous":
+        Conformation = np.array(GenomeStructure[["x", "y", "z"]].head(Ngene))
+    elif mode == "random":
+        sampled_indices = sorted(
+            np.random.choice(len(GenomeStructure), size=Ngene, replace=False)
+        )
+        Conformation = np.array(GenomeStructure[["x", "y", "z"]].iloc[sampled_indices])
+    TID = generate_id()
 
     # start logging
     stdout = sys.stdout
     log_file = open(outpath + "/" + TID + ".log", "w")
     sys.stdout = log_file
-    print("seed: " + str(seed))
+    print(f"The seed is {seed}.")
 
     ##### START RUNNING
-    ScaledCoords, _ = scale_X(HicCoords, resolution)
-    simX, _ = normalizeX(ScaledCoords)
-    save_data(simX, outpath + "/HEMC_simX_resolution" + str(resolution) + ".pkl")
+    ScaledCoords, _ = scale_X(Conformation, resolution)
+    simX, _ = centerX(ScaledCoords)
+    save_data(simX, outpath + "/HMEC_simX_resolution" + str(resolution) + ".pkl")
 
     #### generate random RM
     randRM = generate_random_rotation_matrices(Ncell)
     save_data(
         randRM,
         outpath
-        + "/HEMC_randRM_nCell"
+        + "/"
+        + TID
+        + "_randRM_nCell"
         + str(Ncell)
         + "_rateCap"
         + str(rateCap)
@@ -447,7 +359,7 @@ def main():
         simW[c * 2] = XY[:, 0]
         simW[c * 2 + 1] = XY[:, 1]
 
-    save_data(simW, outpath + "/HEMC_simW_" + str(Ncell) + ".pkl")
+    # save_data(simW, outpath + "/HMEC_simW_" + str(Ncell) + ".pkl")
 
     #### add noise
     simW = np.random.normal(simW, noise)
@@ -464,7 +376,7 @@ def main():
     y = np.arange(LBy, UBy)  # create a 1D array of y values
     xx, yy = np.meshgrid(x, y)  # create a 2D grid of x and y values
     xy = np.stack((xx, yy), axis=-1)  # create a 3D array of (x,y) pairs
-    for c in tqdm(range(Ncell), desc="generate expression matrix for cell"):
+    for c in range(Ncell):
         for g in range(Ngene):
             loc = simW[c * 2 : (c + 1) * 2, g]
             sigma = np.eye(2) * 8  # create a 2x2 identity matrix and multiply by 8
@@ -478,6 +390,7 @@ def main():
         Matrix, rateCap
     )  # generate random numbers from a binomial distribution with Matrix as the number of trials and rateCap as the probability
 
+    #### drop centers based on drop rate
     mask = (
         np.random.random((Ncell, Ngene)) < rateDrop
     )  # generate a boolean mask with rateDrop as the probability
@@ -485,66 +398,46 @@ def main():
         mask
     ] = 0  # set the elements of CapMatrix that correspond to True in the mask to zero
 
-    # ### write gem
-    gem_write = (
-        sample_name
-        + "_nCell"
-        + str(Ncell)
-        + "_rateCap"
-        + str(rateCap)
-        + "_rateDrop"
-        + str(rateDrop)
-        + "_resolution"
-        + str(resolution)
-        + ".gem"
-    )
-    gout = open(outpath + "/" + gem_write, "wb", 100 * (2**20))
-    gout.write(b"geneID\tx\ty\tMIDCount\tExonCount\tCellID\n")
+    #### write gem as data frame
+    columns = ["geneID", "x", "y", "MIDCount", "ExonCount", "CellID"]
     rows = []
-
-    # ramdom cell loc center
-    center = {}
-    for c in range(int(Ncell)):
-        x = random.randrange(0, 2000)
-        y = random.randrange(0, 2000)
-        center[c] = [x, y]
 
     for index, n in np.ndenumerate(CapMatrix):
         if n > 0:
-            rows.append(
-                "gene"
-                + str(index[1])
-                + "\t"
-                + str(index[2])
-                + "\t"
-                + str(index[3])
-                + "\t"
-                + str(n)
-                + "\t"
-                + str(n)
-                + "\t"
-                + str(index[0])
-                + "\n"
-            )
-    data = "".join(rows).encode()
-    gout.write(data)
-    gout.close()
+            row = [
+                "gene" + str(index[1]),
+                str(index[2]),
+                str(index[3]),
+                str(n),
+                str(n),
+                str(index[0]),
+            ]
+            rows.append(row)
 
-    # Run
-    gem_path = outpath + "/" + gem_write
-    simX_path = outpath + "/HEMC_simX_resolution" + str(resolution) + ".pkl"
+    gem = pd.DataFrame(rows, columns=columns)
+    # gem_write = (
+    #    TID
+    #    + "_nCell"
+    #    + str(Ncell)
+    #    + "_rateCap"
+    #    + str(rateCap)
+    #    + "_rateDrop"
+    #    + str(rateDrop)
+    #    + "_resolution"
+    #    + str(resolution)
+    #    + ".gem"
+    # )
+    # gem.to_csv(outpath + "/" + gem_write, sep='\t', index=False)
+
+    # Run CRUST
+    # gem_path = outpath + "/" + gem_write
+    simX_path = outpath + "/HMEC_simX_resolution" + str(resolution) + ".pkl"
     # Hic Matrix = np.loadtxt(sys.argv[3], delimiter=" ")
-    sample_name = "HEMC"
-
-    # filter zero cols and rows
-    # HicMatrix = HicMatrix[~np.all(HicMatrix == 0, axis=1)]
-    # HicMatrix = HicMatrix[:, ~np.all(HicMatrix == 0, axis=0)]
-    # make dir
-    # Path(outpath).mkdir(parents=True, exist_ok=True)
+    sample_name = "HMEC"
 
     # read input gem
     models = []
-    gem = pd.read_csv(gem_path, sep="\t", comment="#")
+    # gem = pd.read_csv(gem_path, sep="\t", comment="#")
     GeneUIDs = pd.Series(
         sorted(gem.geneID.drop_duplicates(), key=lambda fname: int(fname.strip("gene")))
     )
@@ -582,69 +475,106 @@ def main():
     W = normalizeW(W)
     simX = load_data(simX_path)
     # save_data(Mask, outpath + "/" + TID + "_Mask.pkl")
-    loop = 1
     # get rotation R through shared X and input W
     RM = generate_random_rotation_matrices(int(W.shape[0] / 2))
     Mask = MASK(gem, GeneIDs=GeneUIDs, Ngene=Ngene_for_rotation_derivation)
-
-    while loop <= 20:
-        newX = UpdateX(RM, W)
-        rmsd1, _, _ = numpy_svd_rmsd_rot(
-            simX / np.linalg.norm(simX), newX / np.linalg.norm(newX)
+    X = UpdateX(RM, W)
+    write_sim_pdb(
+        scale_X(X, 0.5)[0],
+        prefix=TID
+        + "_top100_nCell"
+        + str(Ncell)
+        + "_rateCap"
+        + str(rateCap)
+        + "_rateDrop"
+        + str(rateDrop)
+        + "_resolution"
+        + str(resolution)
+        + "_initial",
+        outpath=outpath,
+    )
+    try:
+        for loop in range(30):
+            RM = DeriveRotation(W, X, Mask)
+            try:
+                X = UpdateX(RM, W)
+            except np.linalg.LinAlgError:
+                return "numpy.linalg.LinAlgError"
+            rmsd1, _, _ = numpy_svd_rmsd_rot(
+                normalizeX(simX, method="mean"), normalizeX(X), method="mean"
+            )
+            X_mirror = np.copy(X)
+            X_mirror[:, 2] = -X_mirror[:, 2]
+            rmsd2, _, _ = numpy_svd_rmsd_rot(
+                normalizeX(simX, method="mean"), normalizeX(X_mirror), method="mean"
+            )
+            minrmsd = min(rmsd1, rmsd2)
+            print(
+                "Distance between ground truth and reconstructed structure for loop "
+                + str(loop + 1)
+                + " is: "
+                + str(rmsd1)
+                + " and "
+                + str(rmsd2)
+            )
+            write_sim_pdb(
+                scale_X(X, 0.5)[0],
+                prefix=TID
+                + "_top100_nCell"
+                + str(Ncell)
+                + "_rateCap"
+                + str(rateCap)
+                + "_rateDrop"
+                + str(rateDrop)
+                + "_resolution"
+                + str(resolution)
+                + "_updated"
+                + str(loop + 1)
+                + "times",
+                outpath=outpath,
+            )
+            if minrmsd < 0.25:
+                break
+    except Exception as error:
+        print(error)
+        row = (
+            TID,
+            sample_name,
+            str(Ngene),
+            str(Ncell),
+            str(rateCap),
+            str(rateDrop),
+            str(resolution),
+            str(Ngene_for_rotation_derivation),
+            str(noise),
+            mode,
+            "NA",
+            "NA",
+            "NA",
         )
-        X_mirror = np.copy(newX)
-        X_mirror[:, 2] = -X_mirror[:, 2]
-        rmsd2, _, _ = numpy_svd_rmsd_rot(
-            simX / np.linalg.norm(simX), X_mirror / np.linalg.norm(X_mirror)
-        )
-        # dist, _ = numpy_svd_rmsd_rot(simX, newX)
-        minrmsd = min(rmsd1, rmsd2)
-        if rmsd1 < rmsd2:
-            X_scale = newX
-        else:
-            X_scale = X_mirror
-        print(
-            "Distance between ground truth and reconstructed structure for loop "
-            + str(loop)
-            + " is: "
-            + str(rmsd1)
-            + " and "
-            + str(rmsd2)
-        )
-        write_sim_pdb(
-            scale_X(X_scale, 0.5)[0],
-            prefix=TID
-            + "_top100_nCell"
-            + str(Ncell)
-            + "_rateCap"
-            + str(rateCap)
-            + "_rateDrop"
-            + str(rateDrop)
-            + "_resolution"
-            + str(resolution)
-            + "_updated"
-            + str(loop)
-            + "times",
-            outpath=outpath,
-        )
-        loop += 1
-        if minrmsd < 0.01:
-            break
-        else:
-            RM = DeriveRotation_v3(W, X_scale, Mask)
+        write_row_to_csv(csv, row)
+        sys.exit(1)
 
     ####### evaluation
-    D = euclidean_distance_3d_matrix(X_scale)
+    if minrmsd == rmsd1:
+        mirror = 0
+    else:
+        mirror = 1
+    D = euclidean_distance_3d_matrix(X)
     S = distance_to_similarity(D)
     D_ = euclidean_distance_3d_matrix(simX)
     S_ = distance_to_similarity(D_)
     print(
-        "Distance".ljust(18, " ") + "\t" + "Pearson".ljust(18, " ") + "\t" + "Spearman"
+        "RMSD Distance".ljust(18, " ")
+        + "\t"
+        + "Mirror"
+        + "\t"
+        + "Spearman Correlation Coefficient"
     )
     print(
-        str(minrmsd)
+        str(rmsd1)
         + "\t"
-        + str(np.corrcoef(S_.flatten(), S.flatten())[0][1])
+        + str(mirror)
         + "\t"
         + str(scipy.stats.spearmanr(S_.flatten(), S.flatten())[0])
     )
@@ -664,11 +594,11 @@ def main():
         str(Ngene_for_rotation_derivation),
         str(noise),
         mode,
-        str(minrmsd),
-        str(np.corrcoef(S_.flatten(), S.flatten())[0][1]),
+        str(rmsd1),
+        str(mirror),
         str(scipy.stats.spearmanr(S_.flatten(), S.flatten())[0]),
     )
-    ## "../Results/HEMC/SimulationResults.csv"
+
     write_row_to_csv(csv, row)
 
 

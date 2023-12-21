@@ -6,10 +6,10 @@ import model, util
 from tqdm import tqdm
 from pathlib import Path
 from scipy import linalg as LA
+from scipy.linalg import LinAlgWarning
 from scipy.spatial.transform import Rotation as R
 from stereopy import *
 from rigid import *
-import util
 
 
 """
@@ -46,7 +46,7 @@ def genedistribution(gem, CellIDs, TopGenes):
 
 
 def MASK(gem, GeneIDs, CellIDs, Ngene):
-    mask = np.zeros((CellIDs.size, len(GeneIDs)))
+    mask = np.zeros((len(CellIDs), len(GeneIDs)))
     i = 0
     for c in CellIDs:
         gem_cell = gem[gem.CellID == c]
@@ -63,24 +63,27 @@ def MASK(gem, GeneIDs, CellIDs, Ngene):
     return np.bool_(mask)
 
 
-def DeriveRotation(W, X, Mask, CellUIDs):
+def DeriveRotation(W, X, Mask, CellUIDs, adata):
     F = int(W.shape[0] / 2)
     Rotation = np.zeros((F, 3, 3))
     pop_indices = []
     for i in range(F):
-        # filter genes
-        Wi = W[:, Mask[i, :]]
-        # filter cells
-        Wi_filter = Wi[~np.isnan(Wi).any(axis=1), :]
-        while Wi_filter.shape[0] < 6:
-            Mask[i, :] = change_last_true(Mask[i, :])
-            # filter genes
+        try:
+            # print("derive rotation for cell " + str(i))
+            # select genes
             Wi = W[:, Mask[i, :]]
             # filter cells
             Wi_filter = Wi[~np.isnan(Wi).any(axis=1), :]
-        idx = int(find_subarray(Wi_filter, Wi[i * 2]) / 2)
-        Xi = X[Mask[i, :], :]
-        try:
+            while Wi_filter.shape[0] < 6:
+                # reduce the numebr of gene in Mask if cell number less than 3
+                Mask[i, :] = change_last_true(Mask[i, :])
+                # print("reduce one gene for cell " + str(i))
+                # filter genes
+                Wi = W[:, Mask[i, :]]
+                # filter cells
+                Wi_filter = Wi[~np.isnan(Wi).any(axis=1), :]
+            idx = int(find_subarray(Wi_filter, Wi[i * 2]) / 2)
+            Xi = X[Mask[i, :], :]
             model = factor(Wi_filter)
             _, R, _ = numpy_svd_rmsd_rot(np.dot(model.Rs[idx], model.Ss[0]).T, Xi)
             Rotation[i] = R
@@ -91,8 +94,9 @@ def DeriveRotation(W, X, Mask, CellUIDs):
         Rotation = np.delete(Rotation, obj=i, axis=0)
         W = np.delete(W, obj=i * 2 + 1, axis=0)
         W = np.delete(W, obj=i * 2, axis=0)
+        adata = adata[~(adata.obs.index.values == str(CellUIDs[i])), :]
         del CellUIDs[i]
-    return Rotation, W, CellUIDs
+    return Rotation, W, CellUIDs, adata
 
 
 def UpdateX(RM, W, GeneUID, *X_old):
@@ -135,7 +139,7 @@ def UpdateX(RM, W, GeneUID, *X_old):
                 )
             except NameError:
                 newX = np.array([newXi])
-        except (np.linalg.LinAlgError, LA.LinAlgWarning) as err:
+        except (np.linalg.LinAlgError, LinAlgWarning) as err:
             print("Gene No." + str(j + 1) + " is removed due to: ", err)
             pop_indices.append(j)
 
@@ -185,20 +189,6 @@ def numpy_svd_rmsd_rot(in_crds1, in_crds2):
     rot33 = np.dot(v, w).transpose()
     # print(is_reflection)
     return rmsd, rot33, is_reflection
-
-
-def normalizeX(X):
-    """
-    X = (nGene,3)
-    """
-    if len(X.shape) == 2 and X.shape[1] == 3:
-        result = np.empty_like(X)
-        tl = -np.nanmean(X, axis=0)
-        for i in range(X.shape[1]):
-            result[:, i] = X[:, i] - np.nanmean(X[:, i])
-        return result, tl
-    else:
-        print("ValueError: X shape is wrong.")
 
 
 def normalizeW(W):
@@ -463,6 +453,20 @@ def legalname(string):
     return string
 
 
+def mean_radius(x):
+    center = np.mean(x, axis=0)
+    dist = np.linalg.norm(x - center, axis=1)
+    return np.mean(dist)  # Return the average distance, i.e. the average radius
+
+
+def normalizeX(x, method="mean"):
+    if method == "L2norm":
+        return x / (np.linalg.norm(x) ** 2)
+    elif method == "mean":
+        r = mean_radius(x)
+        return x / r
+
+
 def ReST3D(
     gem_path,
     species,
@@ -496,7 +500,7 @@ def ReST3D(
         .sort_values(["Count"], ascending=False)
         .geneID
     )
-    CellUIDs = gem.CellID.drop_duplicates()
+    CellUIDs = list(gem.CellID.drop_duplicates())
 
     print(
         "Speceis: "
@@ -564,7 +568,14 @@ def ReST3D(
                         pass
 
     ##### generate random RM and derive X
-    W = genedistribution(gem, CellUIDs.values, GeneUIDs)
+    # adata
+    data = read_gem(file_path=gem_path, bin_type="cell_bins")
+    data.tl.raw_checkpoint()
+    adata = stereo_to_anndata(
+        data, flavor="scanpy", sample_id="sample", reindex=False, output=None
+    )
+    # generate and normalize W
+    W = genedistribution(gem, CellUIDs, GeneUIDs)
     W, GeneUIDs = filterGenes(W, GeneUIDs, threshold=threshold_for_gene_filter)
     W = normalizeW(W)
     # generate random Rotation Matrix
@@ -588,16 +599,21 @@ def ReST3D(
             CellIDs=CellUIDs,
             Ngene=Ngene_for_rotation_derivation,
         )
-        RM, W, CellUIDs = DeriveRotation(W, X, Mask, CellUIDs)
+        RM, W, CellUIDs, adata = DeriveRotation(W, X, Mask, CellUIDs, adata)
         # step2: update conformation X with RM and W
         try:
             newX, W, GeneUIDs, X = UpdateX(RM, W, GeneUIDs, X)
         except np.linalg.LinAlgError:
             return "numpy.linalg.LinAlgError"
         rmsd, _, _ = numpy_svd_rmsd_rot(
-            X / np.linalg.norm(X), newX / np.linalg.norm(newX)
+            normalizeX(X, method="mean"), normalizeX(newX, method="mean")
         )
-        print("Distance between X_new and X_old is: " + str(rmsd))
+        print(
+            "Distance between X_new and X_old for loop "
+            + str(loop + 1)
+            + " is: "
+            + str(rmsd)
+        )
         write_pdb(
             newX,
             gene_chr,
@@ -609,16 +625,12 @@ def ReST3D(
         )
         ## keep looping until X converges
         X = newX
-        if rmsd < 0.01:
+        if rmsd < 0.25:
             break
 
     #################### SAVING #####################
     print("Number of total Transcription centers is: " + str(X.shape[0]))
-    data = read_gem(file_path=gem_path, bin_type="cell_bins")
-    data.tl.raw_checkpoint()
-    adata = stereo_to_anndata(
-        data, flavor="scanpy", sample_id="sample", reindex=False, output=None
-    )
+
     adata.obsm["Rotation"] = RM
     adata.uns["X"] = pd.DataFrame(X, index=GeneUIDs)
     adata.uns["X"].columns = adata.uns["X"].columns.astype(str)
@@ -672,12 +684,15 @@ def parse_args():
     parser.add_argument(
         "--ctkey",
         type=str,
-        help="Key of celltype column in the cell type file",
+        help="Key of celltype column in the annotation file",
     )
     parser.add_argument(
         "--cikey",
         type=str,
-        help="Key of cell id column in the cell type file",
+        help="Key of cell id column in the annotation file",
+    )
+    parser.add_argument(
+        "--csep", type=str, help="Annotation file separator", default="\t"
     )
     parser.add_argument(
         "--seed",
@@ -701,10 +716,12 @@ def main():
     np.random.seed(seed)
 
     #################### RUNNING ####################
-    if args.celltype is not None and args.ctkey is not None and args.cikey is not None:
+    if (
+        args.celltype is not None and args.ctkey is not None and args.cikey is not None
+    ):  # run multiple cell types
         print("Cell types have been set (path is %s)" % args.celltype + "\n")
         gem = read_gem_as_csv(args.gem_path)
-        celltype = pd.read_csv(args.celltype, sep="\t", dtype=str)
+        celltype = pd.read_csv(args.celltype, sep=args.csep, dtype=str)
         for ct in celltype[args.ctkey].drop_duplicates():
             ct_legal = legalname(ct)
             gem_ct_path = args.gem_path + "." + args.ctkey + "." + ct_legal + ".tsv"
@@ -725,15 +742,22 @@ def main():
                 continue
             else:
                 print(ct + ": conformation reconstruction finished.")
-    else:
-        ReST3D(
-            args.gem_path,
-            args.species,
-            seed,
-            args.threshold,
-            args.percent,
-            args.out_path,
-        )
+    else:  # run single cell type
+        try:
+            ReST3D(
+                args.gem_path,
+                args.species,
+                seed,
+                args.threshold,
+                args.percent,
+                args.out_path,
+            )
+        except Exception as error:
+            print(error)
+            print("conformation reconstruction failed.")
+            continue
+        else:
+            print("conformation reconstruction finished.")
 
 
 if __name__ == "__main__":
