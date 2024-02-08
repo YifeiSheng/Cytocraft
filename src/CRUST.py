@@ -343,12 +343,12 @@ def write_pdb(show_X, genechr, geneLst, write_path, sp, seed, prefix="chain"):
         chain_idx += 1
 
 
-def read_gem_as_csv(path):
+def read_gem_as_csv(path, sep="\t"):
     # from collections import defaultdict
 
     gem = pd.read_csv(
         path,
-        sep="\t",
+        sep=sep,
         comment="#",
         dtype=str,
         converters={
@@ -474,6 +474,7 @@ def ReST3D(
     threshold_for_gene_filter,
     percent_of_gene_for_rotation_derivation,
     out_path,
+    sep,
 ):
     #################### INIT ####################
     models = []
@@ -491,7 +492,7 @@ def ReST3D(
 
     #################### PROCESSING #####################
     # read input gem
-    gem = read_gem_as_csv(gem_path)
+    gem = read_gem_as_csv(gem_path, sep=sep)
 
     GeneUIDs = list(
         gem.groupby(["geneID"])["MIDCount"]
@@ -569,10 +570,10 @@ def ReST3D(
 
     ##### generate random RM and derive X
     # adata
-    data = read_gem(file_path=gem_path, bin_type="cell_bins")
+    data = read_gem(file_path=gem_path, bin_type="cell_bins", sep=sep)
     data.tl.raw_checkpoint()
     adata = stereo_to_anndata(
-        data, flavor="scanpy", sample_id="sample", reindex=False, output=None
+        data, flavor="scanpy", sample_id=SN, reindex=False, output=None
     )
     # generate and normalize W
     W = genedistribution(gem, CellUIDs, GeneUIDs)
@@ -676,6 +677,9 @@ def parse_args():
         default=0.90,
     )
     parser.add_argument(
+        "--sep", type=str, help="input gem file separator", default="\t"
+    )
+    parser.add_argument(
         "-c",
         "--celltype",
         type=str,
@@ -720,7 +724,7 @@ def main():
         args.celltype is not None and args.ctkey is not None and args.cikey is not None
     ):  # run multiple cell types
         print("Cell types have been set (path is %s)" % args.celltype + "\n")
-        gem = read_gem_as_csv(args.gem_path)
+        gem = read_gem_as_csv(args.gem_path, sep=args.sep)
         celltype = pd.read_csv(args.celltype, sep=args.csep, dtype=str)
         for ct in celltype[args.ctkey].drop_duplicates():
             ct_legal = legalname(ct)
@@ -735,6 +739,7 @@ def main():
                     args.threshold,
                     args.percent,
                     args.out_path,
+                    args.sep,
                 )
             except Exception as error:
                 print(error)
@@ -751,11 +756,11 @@ def main():
                 args.threshold,
                 args.percent,
                 args.out_path,
+                args.sep,
             )
         except Exception as error:
             print(error)
             print("conformation reconstruction failed.")
-            continue
         else:
             print("conformation reconstruction finished.")
 
