@@ -739,7 +739,7 @@ def main():
                     args.threshold,
                     args.percent,
                     args.out_path,
-                    args.sep,
+                    sep="\t",
                 )
             except Exception as error:
                 print(error)
