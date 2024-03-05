@@ -1,0 +1,6 @@
+HEADER    CHROMOSOMES                             11-MAY-23   CMB1
+TITLE     CHROMOSOMES OF MICE BRAIN INFERED FROM sST DATA
+ATOM     50  O   GLY g  12       3.851   1.254   3.475  2.00 10.00           O
+TER      51      GLY g  12
+CONECT   50   51
+END

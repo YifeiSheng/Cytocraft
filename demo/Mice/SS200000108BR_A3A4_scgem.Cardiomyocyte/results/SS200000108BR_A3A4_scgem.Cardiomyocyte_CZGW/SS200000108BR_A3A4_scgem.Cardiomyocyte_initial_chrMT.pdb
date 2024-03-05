@@ -1,0 +1,18 @@
+HEADER    CHROMOSOMES                             05-Mar-24   585 
+TITLE     CHROMOSOME CONFORMATION INFERED FROM sST DATA
+ATOM    779  O   GLY T 760       0.042  -0.012  -0.039  2.00 10.00           O
+ATOM    780  O   GLY T 761      -0.023  -0.091   0.101  2.00 10.00           O
+ATOM    781  O   GLY T 762      -0.013   0.023  -0.257  2.00 10.00           O
+ATOM    782  O   GLY T 763       0.102   0.227  -0.040  2.00 10.00           O
+ATOM    783  O   GLY T 764       0.216  -0.385   0.132  2.00 10.00           O
+ATOM    784  O   GLY T 765       0.173  -0.110   0.270  2.00 10.00           O
+ATOM    785  O   GLY T 766       0.029   0.067  -0.072  2.00 10.00           O
+TER     786      GLY T 766
+CONECT  779  780
+CONECT  780  779  781
+CONECT  781  780  782
+CONECT  782  781  783
+CONECT  783  782  784
+CONECT  784  783  785
+CONECT  785  784
+END

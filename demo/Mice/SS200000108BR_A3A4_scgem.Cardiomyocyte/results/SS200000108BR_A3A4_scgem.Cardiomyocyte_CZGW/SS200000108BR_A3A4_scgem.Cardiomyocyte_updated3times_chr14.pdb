@@ -1,0 +1,50 @@
+HEADER    CHROMOSOMES                             05-Mar-24   585 
+TITLE     CHROMOSOME CONFORMATION INFERED FROM sST DATA
+ATOM    231  O   GLY F 226      -0.418  -0.085  -0.234  2.00 10.00           O
+ATOM    232  O   GLY F 227      -0.111  -0.534   0.094  2.00 10.00           O
+ATOM    233  O   GLY F 228      -0.207   0.703  -0.304  2.00 10.00           O
+ATOM    234  O   GLY F 229       0.333   0.052   0.003  2.00 10.00           O
+ATOM    235  O   GLY F 230      -0.202  -0.335  -0.099  2.00 10.00           O
+ATOM    236  O   GLY F 231       0.052   0.217   0.397  2.00 10.00           O
+ATOM    237  O   GLY F 232       0.482  -0.524  -0.037  2.00 10.00           O
+ATOM    238  O   GLY F 233       0.386  -0.094   0.267  2.00 10.00           O
+ATOM    239  O   GLY F 234      -0.178  -0.040   0.114  2.00 10.00           O
+ATOM    240  O   GLY F 235       0.088   0.237  -1.385  2.00 10.00           O
+ATOM    241  O   GLY F 236       0.490   0.131  -0.095  2.00 10.00           O
+ATOM    242  O   GLY F 237      -0.343   0.160   0.033  2.00 10.00           O
+ATOM    243  O   GLY F 238      -0.629   0.301  -0.419  2.00 10.00           O
+ATOM    244  O   GLY F 239      -0.085   0.014  -0.166  2.00 10.00           O
+ATOM    245  O   GLY F 240      -0.059  -0.275  -0.148  2.00 10.00           O
+ATOM    246  O   GLY F 241       0.384   0.860  -0.121  2.00 10.00           O
+ATOM    247  O   GLY F 242       0.392  -0.181   0.046  2.00 10.00           O
+ATOM    248  O   GLY F 243       0.406  -0.130   0.046  2.00 10.00           O
+ATOM    249  O   GLY F 244      -0.350  -0.025   0.305  2.00 10.00           O
+ATOM    250  O   GLY F 245       0.793   0.147  -0.028  2.00 10.00           O
+ATOM    251  O   GLY F 246       1.344   0.195  -0.834  2.00 10.00           O
+ATOM    252  O   GLY F 247       0.350  -0.033   0.076  2.00 10.00           O
+ATOM    253  O   GLY F 248       0.030   0.141   0.131  2.00 10.00           O
+TER     254      GLY F 248
+CONECT  231  232
+CONECT  232  231  233
+CONECT  233  232  234
+CONECT  234  233  235
+CONECT  235  234  236
+CONECT  236  235  237
+CONECT  237  236  238
+CONECT  238  237  239
+CONECT  239  238  240
+CONECT  240  239  241
+CONECT  241  240  242
+CONECT  242  241  243
+CONECT  243  242  244
+CONECT  244  243  245
+CONECT  245  244  246
+CONECT  246  245  247
+CONECT  247  246  248
+CONECT  248  247  249
+CONECT  249  248  250
+CONECT  250  249  251
+CONECT  251  250  252
+CONECT  252  251  253
+CONECT  253  252
+END

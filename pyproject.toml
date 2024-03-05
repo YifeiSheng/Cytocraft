@@ -12,7 +12,7 @@
 [project]
   name = "crust-st"
   version = "1.0.0"
-  dependencies = []
+  dependencies = ["scanpy","shapely"]
   authors = [
     { name="Yifei Sheng", email="yfsheng6@gmail.com" },
     { name="Shiying Li", email="shiyingli7-c@my.cityu.edu.hk"},

@@ -1,0 +1,98 @@
+HEADER    CHROMOSOMES                             05-Mar-24   585 
+TITLE     CHROMOSOME CONFORMATION INFERED FROM sST DATA
+ATOM     51  O   GLY B  50       0.388   0.540  -0.273  2.00 10.00           O
+ATOM     52  O   GLY B  51      -0.103   0.329   0.117  2.00 10.00           O
+ATOM     53  O   GLY B  52      -0.037  -0.140  -0.381  2.00 10.00           O
+ATOM     54  O   GLY B  53       0.038  -0.038   0.186  2.00 10.00           O
+ATOM     55  O   GLY B  54      -0.535   0.040   0.353  2.00 10.00           O
+ATOM     56  O   GLY B  55       0.048  -0.142  -0.229  2.00 10.00           O
+ATOM     57  O   GLY B  56       0.007  -0.396   0.031  2.00 10.00           O
+ATOM     58  O   GLY B  57      -0.026  -0.034   0.165  2.00 10.00           O
+ATOM     59  O   GLY B  58       0.162   0.303  -0.287  2.00 10.00           O
+ATOM     60  O   GLY B  59       0.244   0.120   0.112  2.00 10.00           O
+ATOM     61  O   GLY B  60       0.083  -0.738  -0.230  2.00 10.00           O
+ATOM     62  O   GLY B  61       2.105   0.722  -2.366  2.00 10.00           O
+ATOM     63  O   GLY B  62      -0.176  -0.236  -0.244  2.00 10.00           O
+ATOM     64  O   GLY B  63      -0.394  -0.221   0.177  2.00 10.00           O
+ATOM     65  O   GLY B  64       0.099  -0.597  -0.376  2.00 10.00           O
+ATOM     66  O   GLY B  65      -0.544  -0.290  -0.412  2.00 10.00           O
+ATOM     67  O   GLY B  66       0.057  -0.161   0.207  2.00 10.00           O
+ATOM     68  O   GLY B  67      -0.699   0.005  -0.425  2.00 10.00           O
+ATOM     69  O   GLY B  68       0.045   0.032   0.157  2.00 10.00           O
+ATOM     70  O   GLY B  69      -0.057  -0.049  -0.142  2.00 10.00           O
+ATOM     71  O   GLY B  70      -0.041   0.052   0.215  2.00 10.00           O
+ATOM     72  O   GLY B  71      -0.450  -0.040  -0.165  2.00 10.00           O
+ATOM     73  O   GLY B  72      -0.317   0.016   0.026  2.00 10.00           O
+ATOM     74  O   GLY B  73      -0.336  -0.347   0.080  2.00 10.00           O
+ATOM     75  O   GLY B  74      -0.221   0.390  -0.244  2.00 10.00           O
+ATOM     76  O   GLY B  75       0.027  -0.347  -0.497  2.00 10.00           O
+ATOM     77  O   GLY B  76      -0.111  -0.039   0.178  2.00 10.00           O
+ATOM     78  O   GLY B  77      -0.177  -0.268  -0.324  2.00 10.00           O
+ATOM     79  O   GLY B  78       0.473  -0.910  -0.155  2.00 10.00           O
+ATOM     80  O   GLY B  79      -0.103   0.036   0.038  2.00 10.00           O
+ATOM     81  O   GLY B  80       0.089  -0.231   0.356  2.00 10.00           O
+ATOM     82  O   GLY B  81      -0.661   0.029   0.566  2.00 10.00           O
+ATOM     83  O   GLY B  82      -0.047   0.191   0.527  2.00 10.00           O
+ATOM     84  O   GLY B  83       0.531  -0.409  -0.032  2.00 10.00           O
+ATOM     85  O   GLY B  84       1.081   0.003   0.100  2.00 10.00           O
+ATOM     86  O   GLY B  85      -0.796  -0.452   0.041  2.00 10.00           O
+ATOM     87  O   GLY B  86       0.178   0.507   0.859  2.00 10.00           O
+ATOM     88  O   GLY B  87       0.207   0.563   0.220  2.00 10.00           O
+ATOM     89  O   GLY B  88      -0.348  -0.025   0.158  2.00 10.00           O
+ATOM     90  O   GLY B  89       0.357  -0.374   0.006  2.00 10.00           O
+ATOM     91  O   GLY B  90      -0.279   0.207   0.055  2.00 10.00           O
+ATOM     92  O   GLY B  91      -0.472   0.153   0.305  2.00 10.00           O
+ATOM     93  O   GLY B  92      -0.319  -0.410  -0.147  2.00 10.00           O
+ATOM     94  O   GLY B  93      -0.146   0.162   0.186  2.00 10.00           O
+ATOM     95  O   GLY B  94      -0.084  -0.029  -0.006  2.00 10.00           O
+ATOM     96  O   GLY B  95      -0.052  -0.095   0.181  2.00 10.00           O
+ATOM     97  O   GLY B  96       0.168   0.281   0.295  2.00 10.00           O
+TER      98      GLY B  96
+CONECT   51   52
+CONECT   52   51   53
+CONECT   53   52   54
+CONECT   54   53   55
+CONECT   55   54   56
+CONECT   56   55   57
+CONECT   57   56   58
+CONECT   58   57   59
+CONECT   59   58   60
+CONECT   60   59   61
+CONECT   61   60   62
+CONECT   62   61   63
+CONECT   63   62   64
+CONECT   64   63   65
+CONECT   65   64   66
+CONECT   66   65   67
+CONECT   67   66   68
+CONECT   68   67   69
+CONECT   69   68   70
+CONECT   70   69   71
+CONECT   71   70   72
+CONECT   72   71   73
+CONECT   73   72   74
+CONECT   74   73   75
+CONECT   75   74   76
+CONECT   76   75   77
+CONECT   77   76   78
+CONECT   78   77   79
+CONECT   79   78   80
+CONECT   80   79   81
+CONECT   81   80   82
+CONECT   82   81   83
+CONECT   83   82   84
+CONECT   84   83   85
+CONECT   85   84   86
+CONECT   86   85   87
+CONECT   87   86   88
+CONECT   88   87   89
+CONECT   89   88   90
+CONECT   90   89   91
+CONECT   91   90   92
+CONECT   92   91   93
+CONECT   93   92   94
+CONECT   94   93   95
+CONECT   95   94   96
+CONECT   96   95   97
+CONECT   97   96
+END
