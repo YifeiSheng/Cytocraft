@@ -344,8 +344,6 @@ def write_pdb(show_X, genechr, geneLst, write_path, sp, seed, prefix="chain"):
 
 
 def read_gem_as_csv(path, sep="\t"):
-    # from collections import defaultdict
-
     gem = pd.read_csv(
         path,
         sep=sep,
