@@ -1,0 +1,45 @@
+Speceis: Mouse
+File Name:./data/SS200000108BR_A3A4_scgem.Cardiomyocyte
+Seed: 585
+Cell Number: 4455
+Gene Number: 19629
+Sample Name: SS200000108BR_A3A4_scgem.Cardiomyocyte
+Threshold for gene filter is: 0.9
+Proportion of genes used for Rotation Derivation is: 0.001
+Task ID: CZGW
+
+Adding SS200000108BR_A3A4_scgem.Cardiomyocyte in adata.obs['orig.ident'].
+Adding data.position as adata.obsm['spatial'] .
+Adding data.position as adata.obs['x'] and adata.obs['y'] .
+Finished conversion to anndata.
+Distance between X_new and X_old for loop 1 is: 1.5378098741302895
+Distance between X_new and X_old for loop 2 is: 1.0799663211542503
+Distance between X_new and X_old for loop 3 is: 0.7004005056097349
+Distance between X_new and X_old for loop 4 is: 0.5452226204871317
+Distance between X_new and X_old for loop 5 is: 0.4512939473309086
+Distance between X_new and X_old for loop 6 is: 0.37606747144600167
+Distance between X_new and X_old for loop 7 is: 0.3679042725004279
+Distance between X_new and X_old for loop 8 is: 0.3444788291116755
+Distance between X_new and X_old for loop 9 is: 0.3305725492768092
+Distance between X_new and X_old for loop 10 is: 0.3324026462013233
+Distance between X_new and X_old for loop 11 is: 0.3119499665738204
+Distance between X_new and X_old for loop 12 is: 0.3296646096995379
+Distance between X_new and X_old for loop 13 is: 0.356818478133216
+Distance between X_new and X_old for loop 14 is: 0.3266812026723522
+Distance between X_new and X_old for loop 15 is: 0.3233494201412773
+Distance between X_new and X_old for loop 16 is: 0.35532139601211415
+Distance between X_new and X_old for loop 17 is: 0.3456245482488288
+Distance between X_new and X_old for loop 18 is: 0.3666194020957756
+Distance between X_new and X_old for loop 19 is: 0.38349552160291506
+Distance between X_new and X_old for loop 20 is: 0.36330565694904876
+Distance between X_new and X_old for loop 21 is: 0.3313650090784412
+Distance between X_new and X_old for loop 22 is: 0.30973943763129264
+Distance between X_new and X_old for loop 23 is: 0.2969868034386288
+Distance between X_new and X_old for loop 24 is: 0.2665717549604739
+Distance between X_new and X_old for loop 25 is: 0.2675917786233653
+Distance between X_new and X_old for loop 26 is: 0.25640870909174734
+Distance between X_new and X_old for loop 27 is: 0.28346405703403293
+Distance between X_new and X_old for loop 28 is: 0.26701779604904413
+Distance between X_new and X_old for loop 29 is: 0.2715494827921639
+Distance between X_new and X_old for loop 30 is: 0.26212715726668223
+Number of total Transcription centers is: 794

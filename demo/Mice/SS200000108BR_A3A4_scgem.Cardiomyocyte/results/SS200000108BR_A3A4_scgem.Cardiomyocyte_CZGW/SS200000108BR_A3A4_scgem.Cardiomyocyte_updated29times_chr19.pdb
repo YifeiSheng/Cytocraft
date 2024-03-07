@@ -1,0 +1,54 @@
+HEADER    CHROMOSOMES                             06-Mar-24   585 
+TITLE     CHROMOSOME CONFORMATION INFERED FROM sST DATA
+ATOM    384  O   GLY K 374      -0.418  -0.145  -0.086  2.00 10.00           O
+ATOM    385  O   GLY K 375       0.108   0.139   0.378  2.00 10.00           O
+ATOM    386  O   GLY K 376      -0.314   0.091   0.185  2.00 10.00           O
+ATOM    387  O   GLY K 377      -0.358  -0.277   0.149  2.00 10.00           O
+ATOM    388  O   GLY K 378      -0.516  -0.011   0.005  2.00 10.00           O
+ATOM    389  O   GLY K 379      -0.056  -0.941   0.166  2.00 10.00           O
+ATOM    390  O   GLY K 380       0.875   1.469  -1.625  2.00 10.00           O
+ATOM    391  O   GLY K 381      -0.273   0.152   0.338  2.00 10.00           O
+ATOM    392  O   GLY K 382      -0.232   0.296  -0.457  2.00 10.00           O
+ATOM    393  O   GLY K 383      -0.240  -0.127  -0.174  2.00 10.00           O
+ATOM    394  O   GLY K 384      -0.110  -0.267  -0.099  2.00 10.00           O
+ATOM    395  O   GLY K 385       0.308   0.069   0.246  2.00 10.00           O
+ATOM    396  O   GLY K 386      -0.177  -0.280  -0.243  2.00 10.00           O
+ATOM    397  O   GLY K 387      -0.256   0.420  -0.241  2.00 10.00           O
+ATOM    398  O   GLY K 388       0.021  -0.300   0.110  2.00 10.00           O
+ATOM    399  O   GLY K 389      -0.191  -0.165   0.019  2.00 10.00           O
+ATOM    400  O   GLY K 390       0.114   0.465   0.199  2.00 10.00           O
+ATOM    401  O   GLY K 391       0.056   0.195  -0.039  2.00 10.00           O
+ATOM    402  O   GLY K 392      -0.022  -0.436   0.012  2.00 10.00           O
+ATOM    403  O   GLY K 393      -0.076   0.095   0.688  2.00 10.00           O
+ATOM    404  O   GLY K 394      -0.017   0.240   0.324  2.00 10.00           O
+ATOM    405  O   GLY K 395      -0.334   0.463  -0.781  2.00 10.00           O
+ATOM    406  O   GLY K 396       0.177   0.094   0.656  2.00 10.00           O
+ATOM    407  O   GLY K 397      -0.170   1.749  -1.935  2.00 10.00           O
+ATOM    408  O   GLY K 398      -0.001  -0.221  -0.325  2.00 10.00           O
+TER     409      GLY K 398
+CONECT  384  385
+CONECT  385  384  386
+CONECT  386  385  387
+CONECT  387  386  388
+CONECT  388  387  389
+CONECT  389  388  390
+CONECT  390  389  391
+CONECT  391  390  392
+CONECT  392  391  393
+CONECT  393  392  394
+CONECT  394  393  395
+CONECT  395  394  396
+CONECT  396  395  397
+CONECT  397  396  398
+CONECT  398  397  399
+CONECT  399  398  400
+CONECT  400  399  401
+CONECT  401  400  402
+CONECT  402  401  403
+CONECT  403  402  404
+CONECT  404  403  405
+CONECT  405  404  406
+CONECT  406  405  407
+CONECT  407  406  408
+CONECT  408  407
+END

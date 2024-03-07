@@ -1,0 +1,102 @@
+HEADER    CHROMOSOMES                             05-Mar-24   585 
+TITLE     CHROMOSOME CONFORMATION INFERED FROM sST DATA
+ATOM      1  O   GLY A   1      -0.014  -0.178  -0.198  2.00 10.00           O
+ATOM      2  O   GLY A   2      -0.169  -0.457   0.122  2.00 10.00           O
+ATOM      3  O   GLY A   3       0.056   0.084   0.216  2.00 10.00           O
+ATOM      4  O   GLY A   4       0.203   0.593  -0.852  2.00 10.00           O
+ATOM      5  O   GLY A   5       0.554  -0.159   0.441  2.00 10.00           O
+ATOM      6  O   GLY A   6      -0.321  -0.623   0.167  2.00 10.00           O
+ATOM      7  O   GLY A   7      -0.222  -0.283   0.236  2.00 10.00           O
+ATOM      8  O   GLY A   8      -0.538  -0.294   0.088  2.00 10.00           O
+ATOM      9  O   GLY A   9       0.036  -0.299   0.603  2.00 10.00           O
+ATOM     10  O   GLY A  10      -0.089   0.011  -0.086  2.00 10.00           O
+ATOM     11  O   GLY A  11      -0.732   0.966   0.404  2.00 10.00           O
+ATOM     12  O   GLY A  12       1.718   0.166  -3.035  2.00 10.00           O
+ATOM     13  O   GLY A  13       0.764  -0.401  -0.149  2.00 10.00           O
+ATOM     14  O   GLY A  14      -0.003  -0.179   0.303  2.00 10.00           O
+ATOM     15  O   GLY A  15       0.088  -0.256   0.213  2.00 10.00           O
+ATOM     16  O   GLY A  16      -0.407   0.555   0.117  2.00 10.00           O
+ATOM     17  O   GLY A  17       0.401   0.212  -0.716  2.00 10.00           O
+ATOM     18  O   GLY A  18      -0.426  -0.220  -0.406  2.00 10.00           O
+ATOM     19  O   GLY A  19      -0.072   0.573  -0.349  2.00 10.00           O
+ATOM     20  O   GLY A  20       0.618   0.992  -0.965  2.00 10.00           O
+ATOM     21  O   GLY A  21      -0.033  -0.205   0.302  2.00 10.00           O
+ATOM     22  O   GLY A  22      -0.101  -0.331   0.135  2.00 10.00           O
+ATOM     23  O   GLY A  23       0.192   0.195   0.239  2.00 10.00           O
+ATOM     24  O   GLY A  24       0.492  -0.050   0.138  2.00 10.00           O
+ATOM     25  O   GLY A  25      -0.254  -0.076  -0.134  2.00 10.00           O
+ATOM     26  O   GLY A  26      -0.075  -0.332  -1.534  2.00 10.00           O
+ATOM     27  O   GLY A  27      -0.121  -0.481  -0.006  2.00 10.00           O
+ATOM     28  O   GLY A  28      -0.475   0.357  -0.322  2.00 10.00           O
+ATOM     29  O   GLY A  29      -0.025   1.141  -0.470  2.00 10.00           O
+ATOM     30  O   GLY A  30       0.408   0.304   0.582  2.00 10.00           O
+ATOM     31  O   GLY A  31       0.049   0.664   0.641  2.00 10.00           O
+ATOM     32  O   GLY A  32      -0.309  -0.433   0.124  2.00 10.00           O
+ATOM     33  O   GLY A  33      -0.378   0.355  -0.044  2.00 10.00           O
+ATOM     34  O   GLY A  34       0.019  -0.042  -0.242  2.00 10.00           O
+ATOM     35  O   GLY A  35       0.668  -0.154  -1.025  2.00 10.00           O
+ATOM     36  O   GLY A  36       0.135   0.076   0.665  2.00 10.00           O
+ATOM     37  O   GLY A  37      -0.022   0.088   0.431  2.00 10.00           O
+ATOM     38  O   GLY A  38      -0.162  -0.064  -0.397  2.00 10.00           O
+ATOM     39  O   GLY A  39       0.667   0.337  -0.566  2.00 10.00           O
+ATOM     40  O   GLY A  40      -0.166   0.792   0.053  2.00 10.00           O
+ATOM     41  O   GLY A  41      -0.505  -0.066   0.475  2.00 10.00           O
+ATOM     42  O   GLY A  42      -0.313   0.322   0.308  2.00 10.00           O
+ATOM     43  O   GLY A  43      -0.447   0.200  -0.149  2.00 10.00           O
+ATOM     44  O   GLY A  44       0.015  -0.010   0.554  2.00 10.00           O
+ATOM     45  O   GLY A  45      -0.272  -0.522   0.389  2.00 10.00           O
+ATOM     46  O   GLY A  46       0.014   0.460  -0.927  2.00 10.00           O
+ATOM     47  O   GLY A  47      -0.139   0.137  -0.368  2.00 10.00           O
+ATOM     48  O   GLY A  48       0.523   0.491  -0.688  2.00 10.00           O
+ATOM     49  O   GLY A  49      -0.351  -1.033  -0.130  2.00 10.00           O
+TER      50      GLY A  49
+CONECT    1    2
+CONECT    2    1    3
+CONECT    3    2    4
+CONECT    4    3    5
+CONECT    5    4    6
+CONECT    6    5    7
+CONECT    7    6    8
+CONECT    8    7    9
+CONECT    9    8   10
+CONECT   10    9   11
+CONECT   11   10   12
+CONECT   12   11   13
+CONECT   13   12   14
+CONECT   14   13   15
+CONECT   15   14   16
+CONECT   16   15   17
+CONECT   17   16   18
+CONECT   18   17   19
+CONECT   19   18   20
+CONECT   20   19   21
+CONECT   21   20   22
+CONECT   22   21   23
+CONECT   23   22   24
+CONECT   24   23   25
+CONECT   25   24   26
+CONECT   26   25   27
+CONECT   27   26   28
+CONECT   28   27   29
+CONECT   29   28   30
+CONECT   30   29   31
+CONECT   31   30   32
+CONECT   32   31   33
+CONECT   33   32   34
+CONECT   34   33   35
+CONECT   35   34   36
+CONECT   36   35   37
+CONECT   37   36   38
+CONECT   38   37   39
+CONECT   39   38   40
+CONECT   40   39   41
+CONECT   41   40   42
+CONECT   42   41   43
+CONECT   43   42   44
+CONECT   44   43   45
+CONECT   45   44   46
+CONECT   46   45   47
+CONECT   47   46   48
+CONECT   48   47   49
+CONECT   49   48
+END

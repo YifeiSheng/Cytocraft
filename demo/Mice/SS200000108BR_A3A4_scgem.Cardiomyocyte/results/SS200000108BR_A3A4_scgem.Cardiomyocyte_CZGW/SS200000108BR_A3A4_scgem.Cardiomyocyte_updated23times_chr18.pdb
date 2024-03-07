@@ -1,0 +1,46 @@
+HEADER    CHROMOSOMES                             05-Mar-24   585 
+TITLE     CHROMOSOME CONFORMATION INFERED FROM sST DATA
+ATOM    362  O   GLY J 353      -0.337  -0.148  -0.222  2.00 10.00           O
+ATOM    363  O   GLY J 354      -0.427   0.383  -0.114  2.00 10.00           O
+ATOM    364  O   GLY J 355       0.808  -0.248  -1.774  2.00 10.00           O
+ATOM    365  O   GLY J 356       0.603   0.401   0.534  2.00 10.00           O
+ATOM    366  O   GLY J 357       0.035  -0.251   0.316  2.00 10.00           O
+ATOM    367  O   GLY J 358       0.584   0.056   0.554  2.00 10.00           O
+ATOM    368  O   GLY J 359      -0.183   0.305  -0.059  2.00 10.00           O
+ATOM    369  O   GLY J 360      -0.058   0.094   0.252  2.00 10.00           O
+ATOM    370  O   GLY J 361      -0.417  -0.041  -0.134  2.00 10.00           O
+ATOM    371  O   GLY J 362      -0.060   0.572  -0.520  2.00 10.00           O
+ATOM    372  O   GLY J 363       0.127   0.380  -0.642  2.00 10.00           O
+ATOM    373  O   GLY J 364       0.217  -0.062  -0.567  2.00 10.00           O
+ATOM    374  O   GLY J 365       0.003  -0.008   0.039  2.00 10.00           O
+ATOM    375  O   GLY J 366      -0.358  -0.158   0.143  2.00 10.00           O
+ATOM    376  O   GLY J 367       0.128   0.147   0.119  2.00 10.00           O
+ATOM    377  O   GLY J 368       0.072  -0.031   0.162  2.00 10.00           O
+ATOM    378  O   GLY J 369       0.118  -0.219  -0.298  2.00 10.00           O
+ATOM    379  O   GLY J 370      -0.116   0.379  -0.509  2.00 10.00           O
+ATOM    380  O   GLY J 371       0.203  -0.294  -0.713  2.00 10.00           O
+ATOM    381  O   GLY J 372       0.158  -0.116  -0.027  2.00 10.00           O
+ATOM    382  O   GLY J 373       0.272   0.185   0.017  2.00 10.00           O
+TER     383      GLY J 373
+CONECT  362  363
+CONECT  363  362  364
+CONECT  364  363  365
+CONECT  365  364  366
+CONECT  366  365  367
+CONECT  367  366  368
+CONECT  368  367  369
+CONECT  369  368  370
+CONECT  370  369  371
+CONECT  371  370  372
+CONECT  372  371  373
+CONECT  373  372  374
+CONECT  374  373  375
+CONECT  375  374  376
+CONECT  376  375  377
+CONECT  377  376  378
+CONECT  378  377  379
+CONECT  379  378  380
+CONECT  380  379  381
+CONECT  381  380  382
+CONECT  382  381
+END

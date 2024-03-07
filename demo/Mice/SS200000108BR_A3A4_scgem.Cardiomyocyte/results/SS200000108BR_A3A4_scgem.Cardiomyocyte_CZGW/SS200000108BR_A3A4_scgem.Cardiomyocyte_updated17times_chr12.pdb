@@ -1,0 +1,54 @@
+HEADER    CHROMOSOMES                             05-Mar-24   585 
+TITLE     CHROMOSOME CONFORMATION INFERED FROM sST DATA
+ATOM    179  O   GLY D 176       0.016   0.014   0.584  2.00 10.00           O
+ATOM    180  O   GLY D 177       0.287   0.427   0.585  2.00 10.00           O
+ATOM    181  O   GLY D 178       0.628   0.635   0.133  2.00 10.00           O
+ATOM    182  O   GLY D 179       0.356  -0.042   0.205  2.00 10.00           O
+ATOM    183  O   GLY D 180       0.255   0.092   0.041  2.00 10.00           O
+ATOM    184  O   GLY D 181      -0.380   0.298  -0.274  2.00 10.00           O
+ATOM    185  O   GLY D 182      -0.220  -0.295  -0.037  2.00 10.00           O
+ATOM    186  O   GLY D 183      -0.201  -0.146  -0.335  2.00 10.00           O
+ATOM    187  O   GLY D 184       0.139  -0.322   0.119  2.00 10.00           O
+ATOM    188  O   GLY D 185       0.576   0.160  -0.264  2.00 10.00           O
+ATOM    189  O   GLY D 186      -0.086  -0.115   0.153  2.00 10.00           O
+ATOM    190  O   GLY D 187      -0.001   0.433   0.256  2.00 10.00           O
+ATOM    191  O   GLY D 188       0.646   0.138  -0.260  2.00 10.00           O
+ATOM    192  O   GLY D 189       0.446  -0.762   0.262  2.00 10.00           O
+ATOM    193  O   GLY D 190       0.435  -0.033  -0.272  2.00 10.00           O
+ATOM    194  O   GLY D 191       0.047  -0.163   0.386  2.00 10.00           O
+ATOM    195  O   GLY D 192       0.620   0.513  -1.151  2.00 10.00           O
+ATOM    196  O   GLY D 193      -0.837  -0.616  -0.053  2.00 10.00           O
+ATOM    197  O   GLY D 194       1.386   0.600   0.560  2.00 10.00           O
+ATOM    198  O   GLY D 195       0.842  -0.147  -0.815  2.00 10.00           O
+ATOM    199  O   GLY D 196       0.306   0.008   0.233  2.00 10.00           O
+ATOM    200  O   GLY D 197      -0.238  -0.107   0.180  2.00 10.00           O
+ATOM    201  O   GLY D 198      -0.303  -0.148  -0.064  2.00 10.00           O
+ATOM    202  O   GLY D 199      -0.334  -0.247   0.122  2.00 10.00           O
+ATOM    203  O   GLY D 200      -0.155   0.338   0.428  2.00 10.00           O
+TER     204      GLY D 200
+CONECT  179  180
+CONECT  180  179  181
+CONECT  181  180  182
+CONECT  182  181  183
+CONECT  183  182  184
+CONECT  184  183  185
+CONECT  185  184  186
+CONECT  186  185  187
+CONECT  187  186  188
+CONECT  188  187  189
+CONECT  189  188  190
+CONECT  190  189  191
+CONECT  191  190  192
+CONECT  192  191  193
+CONECT  193  192  194
+CONECT  194  193  195
+CONECT  195  194  196
+CONECT  196  195  197
+CONECT  197  196  198
+CONECT  198  197  199
+CONECT  199  198  200
+CONECT  200  199  201
+CONECT  201  200  202
+CONECT  202  201  203
+CONECT  203  202
+END

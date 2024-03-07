@@ -1,0 +1,52 @@
+HEADER    CHROMOSOMES                             06-Mar-24   585 
+TITLE     CHROMOSOME CONFORMATION INFERED FROM sST DATA
+ATOM    294  O   GLY H 287       0.498  -0.243  -0.513  2.00 10.00           O
+ATOM    295  O   GLY H 288       0.333   0.344  -0.032  2.00 10.00           O
+ATOM    296  O   GLY H 289       0.394  -0.532  -0.198  2.00 10.00           O
+ATOM    297  O   GLY H 290       0.564   1.431  -1.148  2.00 10.00           O
+ATOM    298  O   GLY H 291      -0.095  -0.188  -0.109  2.00 10.00           O
+ATOM    299  O   GLY H 292      -0.250   0.265  -0.840  2.00 10.00           O
+ATOM    300  O   GLY H 293       0.734  -0.093  -0.484  2.00 10.00           O
+ATOM    301  O   GLY H 294       0.176  -0.091  -0.061  2.00 10.00           O
+ATOM    302  O   GLY H 295      -0.364   0.106  -0.070  2.00 10.00           O
+ATOM    303  O   GLY H 296      -0.263   0.211  -0.086  2.00 10.00           O
+ATOM    304  O   GLY H 297       0.181   0.340  -0.830  2.00 10.00           O
+ATOM    305  O   GLY H 298       0.251  -0.139   0.628  2.00 10.00           O
+ATOM    306  O   GLY H 299       0.388   0.635  -0.463  2.00 10.00           O
+ATOM    307  O   GLY H 300      -0.093   0.262  -0.261  2.00 10.00           O
+ATOM    308  O   GLY H 301       0.033  -0.131   0.255  2.00 10.00           O
+ATOM    309  O   GLY H 302       0.406   0.079  -0.296  2.00 10.00           O
+ATOM    310  O   GLY H 303      -0.210  -0.055  -0.024  2.00 10.00           O
+ATOM    311  O   GLY H 304       0.014  -0.289   0.392  2.00 10.00           O
+ATOM    312  O   GLY H 305      -0.044  -0.462  -0.096  2.00 10.00           O
+ATOM    313  O   GLY H 306      -0.268   0.069  -1.251  2.00 10.00           O
+ATOM    314  O   GLY H 307      -0.184   0.095   0.078  2.00 10.00           O
+ATOM    315  O   GLY H 308      -0.032   0.302  -0.691  2.00 10.00           O
+ATOM    316  O   GLY H 309       0.276  -0.228   0.189  2.00 10.00           O
+ATOM    317  O   GLY H 310      -0.064  -0.429   0.324  2.00 10.00           O
+TER     318      GLY H 310
+CONECT  294  295
+CONECT  295  294  296
+CONECT  296  295  297
+CONECT  297  296  298
+CONECT  298  297  299
+CONECT  299  298  300
+CONECT  300  299  301
+CONECT  301  300  302
+CONECT  302  301  303
+CONECT  303  302  304
+CONECT  304  303  305
+CONECT  305  304  306
+CONECT  306  305  307
+CONECT  307  306  308
+CONECT  308  307  309
+CONECT  309  308  310
+CONECT  310  309  311
+CONECT  311  310  312
+CONECT  312  311  313
+CONECT  313  312  314
+CONECT  314  313  315
+CONECT  315  314  316
+CONECT  316  315  317
+CONECT  317  316
+END

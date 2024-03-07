@@ -1,0 +1,58 @@
+HEADER    CHROMOSOMES                             05-Mar-24   585 
+TITLE     CHROMOSOME CONFORMATION INFERED FROM sST DATA
+ATOM    787  O   GLY U 767       0.143   0.078  -0.409  2.00 10.00           O
+ATOM    788  O   GLY U 768      -0.421  -0.601  -0.358  2.00 10.00           O
+ATOM    789  O   GLY U 769       0.097   0.338   0.307  2.00 10.00           O
+ATOM    790  O   GLY U 770      -0.086  -0.090   0.080  2.00 10.00           O
+ATOM    791  O   GLY U 771      -0.006  -0.247  -0.037  2.00 10.00           O
+ATOM    792  O   GLY U 772       0.181   0.090  -1.237  2.00 10.00           O
+ATOM    793  O   GLY U 773       0.705  -0.591  -0.876  2.00 10.00           O
+ATOM    794  O   GLY U 774      -0.316  -0.085   0.096  2.00 10.00           O
+ATOM    795  O   GLY U 775       0.536   0.222  -2.775  2.00 10.00           O
+ATOM    796  O   GLY U 776       0.406  -0.575   0.578  2.00 10.00           O
+ATOM    797  O   GLY U 777       0.784   0.623   0.631  2.00 10.00           O
+ATOM    798  O   GLY U 778      -0.054  -0.346   0.193  2.00 10.00           O
+ATOM    799  O   GLY U 779       0.097  -0.186   0.090  2.00 10.00           O
+ATOM    800  O   GLY U 780      -0.623   0.614  -0.142  2.00 10.00           O
+ATOM    801  O   GLY U 781      -0.284  -0.012  -0.188  2.00 10.00           O
+ATOM    802  O   GLY U 782       0.163   0.032  -0.074  2.00 10.00           O
+ATOM    803  O   GLY U 783      -0.419  -0.227  -0.321  2.00 10.00           O
+ATOM    804  O   GLY U 784       0.183   0.810  -0.378  2.00 10.00           O
+ATOM    805  O   GLY U 785      -0.721   0.571   0.248  2.00 10.00           O
+ATOM    806  O   GLY U 786       0.637   0.720  -0.403  2.00 10.00           O
+ATOM    807  O   GLY U 787       0.313  -0.161   0.820  2.00 10.00           O
+ATOM    808  O   GLY U 788       0.313  -0.512  -0.325  2.00 10.00           O
+ATOM    809  O   GLY U 789      -0.581   0.454   0.041  2.00 10.00           O
+ATOM    810  O   GLY U 790      -0.088   0.184  -0.091  2.00 10.00           O
+ATOM    811  O   GLY U 791      -0.164  -0.656  -0.236  2.00 10.00           O
+ATOM    812  O   GLY U 792      -0.038  -0.279  -0.091  2.00 10.00           O
+ATOM    813  O   GLY U 793      -0.055  -0.336   0.314  2.00 10.00           O
+TER     814      GLY U 793
+CONECT  787  788
+CONECT  788  787  789
+CONECT  789  788  790
+CONECT  790  789  791
+CONECT  791  790  792
+CONECT  792  791  793
+CONECT  793  792  794
+CONECT  794  793  795
+CONECT  795  794  796
+CONECT  796  795  797
+CONECT  797  796  798
+CONECT  798  797  799
+CONECT  799  798  800
+CONECT  800  799  801
+CONECT  801  800  802
+CONECT  802  801  803
+CONECT  803  802  804
+CONECT  804  803  805
+CONECT  805  804  806
+CONECT  806  805  807
+CONECT  807  806  808
+CONECT  808  807  809
+CONECT  809  808  810
+CONECT  810  809  811
+CONECT  811  810  812
+CONECT  812  811  813
+CONECT  813  812
+END

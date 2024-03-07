@@ -1,0 +1,6 @@
+HEADER    CHROMOSOMES                             05-Mar-24   585 
+TITLE     CHROMOSOME CONFORMATION INFERED FROM sST DATA
+ATOM    815  O   GLY V 794      -0.367   0.053   0.344  2.00 10.00           O
+TER     816      GLY V 794
+CONECT  815  816
+END

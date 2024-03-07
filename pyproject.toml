@@ -8,7 +8,7 @@
     "/figure",
   ]
 [tool.hatch.build.targets.wheel]
-  packages = ["src/CRUST_yfsheng"]
+  packages = ["src/crust_st"]
 [project]
   name = "crust-st"
   version = "1.0.0"
@@ -22,7 +22,7 @@
   readme = {file="README.md", content-type= "text/markdown"}
   requires-python = ">=3.8"
   classifiers = [
-    "Development Status :: 4 - Beta"
+    "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3.8",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",

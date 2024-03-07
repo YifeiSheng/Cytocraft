@@ -1,0 +1,54 @@
+HEADER    CHROMOSOMES                             05-Mar-24   585 
+TITLE     CHROMOSOME CONFORMATION INFERED FROM sST DATA
+ATOM    205  O   GLY E 201      -0.508  -0.142   0.307  2.00 10.00           O
+ATOM    206  O   GLY E 202      -0.392  -0.305   0.208  2.00 10.00           O
+ATOM    207  O   GLY E 203       0.466   0.753  -2.189  2.00 10.00           O
+ATOM    208  O   GLY E 204      -0.118  -0.061   0.021  2.00 10.00           O
+ATOM    209  O   GLY E 205       0.730   0.547   0.360  2.00 10.00           O
+ATOM    210  O   GLY E 206      -0.536  -0.264  -0.142  2.00 10.00           O
+ATOM    211  O   GLY E 207      -0.359   0.089   0.293  2.00 10.00           O
+ATOM    212  O   GLY E 208       0.022  -0.377  -0.730  2.00 10.00           O
+ATOM    213  O   GLY E 209       0.057   0.423  -0.017  2.00 10.00           O
+ATOM    214  O   GLY E 210       0.359   0.085  -0.297  2.00 10.00           O
+ATOM    215  O   GLY E 211       0.549   0.074   0.061  2.00 10.00           O
+ATOM    216  O   GLY E 212      -0.038  -0.430   0.207  2.00 10.00           O
+ATOM    217  O   GLY E 213       0.138   0.343   0.129  2.00 10.00           O
+ATOM    218  O   GLY E 214       0.245   0.482  -0.321  2.00 10.00           O
+ATOM    219  O   GLY E 215       0.072   0.716   0.069  2.00 10.00           O
+ATOM    220  O   GLY E 216       0.520  -0.541   0.251  2.00 10.00           O
+ATOM    221  O   GLY E 217       0.047   0.257   0.121  2.00 10.00           O
+ATOM    222  O   GLY E 218       0.087  -0.146   0.003  2.00 10.00           O
+ATOM    223  O   GLY E 219       0.127  -0.721  -0.280  2.00 10.00           O
+ATOM    224  O   GLY E 220       0.474   0.022   0.320  2.00 10.00           O
+ATOM    225  O   GLY E 221       0.164  -0.114  -0.144  2.00 10.00           O
+ATOM    226  O   GLY E 222       0.454  -0.367   0.175  2.00 10.00           O
+ATOM    227  O   GLY E 223      -0.495   0.131   0.076  2.00 10.00           O
+ATOM    228  O   GLY E 224       0.546  -0.201  -0.236  2.00 10.00           O
+ATOM    229  O   GLY E 225      -0.064  -0.223   0.042  2.00 10.00           O
+TER     230      GLY E 225
+CONECT  205  206
+CONECT  206  205  207
+CONECT  207  206  208
+CONECT  208  207  209
+CONECT  209  208  210
+CONECT  210  209  211
+CONECT  211  210  212
+CONECT  212  211  213
+CONECT  213  212  214
+CONECT  214  213  215
+CONECT  215  214  216
+CONECT  216  215  217
+CONECT  217  216  218
+CONECT  218  217  219
+CONECT  219  218  220
+CONECT  220  219  221
+CONECT  221  220  222
+CONECT  222  221  223
+CONECT  223  222  224
+CONECT  224  223  225
+CONECT  225  224  226
+CONECT  226  225  227
+CONECT  227  226  228
+CONECT  228  227  229
+CONECT  229  228
+END
