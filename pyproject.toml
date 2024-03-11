@@ -8,9 +8,9 @@
     "/figure",
   ]
 [tool.hatch.build.targets.wheel]
-  packages = ["src/crust_st"]
+  packages = ["src/pycrust"]
 [project]
-  name = "crust-st"
+  name = "pycrust"
   version = "1.0.0"
   dependencies = ["scanpy","shapely"]
   authors = [
