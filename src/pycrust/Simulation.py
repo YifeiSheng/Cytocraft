@@ -11,87 +11,68 @@ from pycrust.CRUST import *
 from pycrust.model import BasisShapeModel
 
 
-def MASK(gem, GeneIDs, Ngene):
-    CellUIDs = gem.CellID.drop_duplicates()
-    mask = np.zeros((CellUIDs.size, GeneIDs.size))
-    i = 0
-    for c in CellUIDs:
-        gem_cell = gem[gem.CellID == c]
-        GeneUIDs_cell = (
-            gem_cell.groupby(["geneID"])["MIDCount"]
-            .count()
-            .reset_index(name="Count")
-            .sort_values(["Count"], ascending=False)
-            .geneID[:Ngene]
-        )
-
-        mask[i] = np.isin(GeneIDs, GeneUIDs_cell)
-        i += 1
-    return np.bool_(mask)
-
-
-def DeriveRotation(W, X, Mask):
-    F = int(W.shape[0] / 2)
-    Rotation = np.zeros((F, 3, 3))
-    # I = np.array([[1, 0, 0], [0, 1, 0], [0, 0, -1]])
-    for i in range(F):
-        # filter genes
-        Wi = W[:, Mask[i, :]]
-        # filter cells
-        Wi_filter = Wi[~np.isnan(Wi).any(axis=1), :]
-        while Wi_filter.shape[0] < 6:
-            Mask[i, :] = change_last_true(Mask[i, :])
-            Wi = W[:, Mask[i, :]]
-            # filter cells
-            Wi_filter = Wi[~np.isnan(Wi).any(axis=1), :]
-        idx = int(find_subarray(Wi_filter, Wi[i * 2]) / 2)
-        Xi = X[Mask[i, :], :]
-        model = factor(Wi_filter)
-        _, R, _ = numpy_svd_rmsd_rot(np.dot(model.Rs[idx], model.Ss[0]).T, Xi)
-        Rotation[i] = R
-    return Rotation
+# def DeriveRotation(W, X, Mask):
+#    F = int(W.shape[0] / 2)
+#    Rotation = np.zeros((F, 3, 3))
+#    # I = np.array([[1, 0, 0], [0, 1, 0], [0, 0, -1]])
+#    for i in range(F):
+#        # filter genes
+#        Wi = W[:, Mask[i, :]]
+#        # filter cells
+#        Wi_filter = Wi[~np.isnan(Wi).any(axis=1), :]
+#        while Wi_filter.shape[0] < 6:
+#            Mask[i, :] = change_last_true(Mask[i, :])
+#            Wi = W[:, Mask[i, :]]
+#            # filter cells
+#            Wi_filter = Wi[~np.isnan(Wi).any(axis=1), :]
+#        idx = int(find_subarray(Wi_filter, Wi[i * 2]) / 2)
+#        Xi = X[Mask[i, :], :]
+#        model = factor(Wi_filter)
+#        _, R, _ = numpy_svd_rmsd_rot(np.dot(model.Rs[idx], model.Ss[0]).T, Xi)
+#        Rotation[i] = R
+#    return Rotation
 
 
-def UpdateX(RM, W):
-    F = int(W.shape[0] / 2)
-    for j in range(W.shape[1]):
-        a1 = b1 = c1 = d1 = a2 = b2 = c2 = d2 = a3 = b3 = c3 = d3 = 0
-        for i in range(F):
-            if not (
-                np.isnan(W[i * 2 : i * 2 + 2, j]).any() or np.isnan(RM[i, :, :]).any()
-            ):
-                a1 += RM[i, 0, 0] * RM[i, 0, 0] + RM[i, 0, 1] * RM[i, 0, 1]
-                b1 += RM[i, 0, 0] * RM[i, 1, 0] + RM[i, 0, 1] * RM[i, 1, 1]
-                c1 += RM[i, 0, 0] * RM[i, 2, 0] + RM[i, 0, 1] * RM[i, 2, 1]
-
-                a2 += RM[i, 1, 0] * RM[i, 0, 0] + RM[i, 1, 1] * RM[i, 0, 1]
-                b2 += RM[i, 1, 0] * RM[i, 1, 0] + RM[i, 1, 1] * RM[i, 1, 1]
-                c2 += RM[i, 1, 0] * RM[i, 2, 0] + RM[i, 1, 1] * RM[i, 2, 1]
-
-                a3 += RM[i, 2, 0] * RM[i, 0, 0] + RM[i, 2, 1] * RM[i, 0, 1]
-                b3 += RM[i, 2, 0] * RM[i, 1, 0] + RM[i, 2, 1] * RM[i, 1, 1]
-                c3 += RM[i, 2, 0] * RM[i, 2, 0] + RM[i, 2, 1] * RM[i, 2, 1]
-
-                d1 += RM[i, 0, 0] * W[i * 2, j] + RM[i, 0, 1] * W[i * 2 + 1, j]
-                d2 += RM[i, 1, 0] * W[i * 2, j] + RM[i, 1, 1] * W[i * 2 + 1, j]
-                d3 += RM[i, 2, 0] * W[i * 2, j] + RM[i, 2, 1] * W[i * 2 + 1, j]
-            else:
-                # print("skip cell" + str(i) + "for gene" + str(j))
-                pass
-
-        args = np.array([[a1, b1, c1], [a2, b2, c2], [a3, b3, c3]])
-        results = np.array([d1, d2, d3])
-        newXi = LA.solve(args, results)
-        try:
-            newX = np.append(
-                newX,
-                [newXi],
-                axis=0,
-            )
-        except NameError:
-            newX = np.array([newXi])
-
-    return newX
+# def UpdateX(RM, W):
+#    F = int(W.shape[0] / 2)
+#    for j in range(W.shape[1]):
+#        a1 = b1 = c1 = d1 = a2 = b2 = c2 = d2 = a3 = b3 = c3 = d3 = 0
+#        for i in range(F):
+#            if not (
+#                np.isnan(W[i * 2 : i * 2 + 2, j]).any() or np.isnan(RM[i, :, :]).any()
+#            ):
+#                a1 += RM[i, 0, 0] * RM[i, 0, 0] + RM[i, 0, 1] * RM[i, 0, 1]
+#                b1 += RM[i, 0, 0] * RM[i, 1, 0] + RM[i, 0, 1] * RM[i, 1, 1]
+#                c1 += RM[i, 0, 0] * RM[i, 2, 0] + RM[i, 0, 1] * RM[i, 2, 1]
+#
+#                a2 += RM[i, 1, 0] * RM[i, 0, 0] + RM[i, 1, 1] * RM[i, 0, 1]
+#                b2 += RM[i, 1, 0] * RM[i, 1, 0] + RM[i, 1, 1] * RM[i, 1, 1]
+#                c2 += RM[i, 1, 0] * RM[i, 2, 0] + RM[i, 1, 1] * RM[i, 2, 1]
+#
+#                a3 += RM[i, 2, 0] * RM[i, 0, 0] + RM[i, 2, 1] * RM[i, 0, 1]
+#                b3 += RM[i, 2, 0] * RM[i, 1, 0] + RM[i, 2, 1] * RM[i, 1, 1]
+#                c3 += RM[i, 2, 0] * RM[i, 2, 0] + RM[i, 2, 1] * RM[i, 2, 1]
+#
+#                d1 += RM[i, 0, 0] * W[i * 2, j] + RM[i, 0, 1] * W[i * 2 + 1, j]
+#                d2 += RM[i, 1, 0] * W[i * 2, j] + RM[i, 1, 1] * W[i * 2 + 1, j]
+#                d3 += RM[i, 2, 0] * W[i * 2, j] + RM[i, 2, 1] * W[i * 2 + 1, j]
+#            else:
+#                # print("skip cell" + str(i) + "for gene" + str(j))
+#                pass
+#
+#        args = np.array([[a1, b1, c1], [a2, b2, c2], [a3, b3, c3]])
+#        results = np.array([d1, d2, d3])
+#        newXi = LA.solve(args, results)
+#        try:
+#            newX = np.append(
+#                newX,
+#                [newXi],
+#                axis=0,
+#            )
+#        except NameError:
+#            newX = np.array([newXi])
+#
+#    return newX
 
 
 def write_sim_pdb(simX, prefix="simchain", outpath="./Results/"):
@@ -475,8 +456,11 @@ def main():
     W = normalizeW(W)
     # get rotation R through shared X and input W
     RM = generate_random_rotation_matrices(int(W.shape[0] / 2))
-    Mask = MASK(gem, GeneIDs=GeneUIDs, Ngene=Ngene_for_rotation_derivation)
-    X = UpdateX(RM, W)
+    CellUIDs = list(gem.CellID.drop_duplicates())
+    Mask = MASK(
+        gem, GeneIDs=GeneUIDs, CellIDs=CellUIDs, Ngene=Ngene_for_rotation_derivation
+    )
+    X, _, _ = UpdateX(RM, W)
     write_sim_pdb(
         scale_X(X, 0.5)[0],
         prefix=TID
@@ -493,7 +477,7 @@ def main():
     )
     try:
         for loop in range(30):
-            RM = DeriveRotation(W, X, Mask)
+            RM, _, _, _ = DeriveRotation(W, X, Mask)
             try:
                 X = UpdateX(RM, W)
             except np.linalg.LinAlgError:

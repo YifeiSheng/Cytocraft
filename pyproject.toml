@@ -5,7 +5,6 @@
   exclude = [
     "/.git",
     "/demo",
-    "/figure",
   ]
 [tool.hatch.build.targets.wheel]
   packages = ["src/pycrust"]
@@ -30,7 +29,7 @@
     "Topic :: Scientific/Engineering :: Bio-Informatics",  
   ]
   license = {text = "MIT license"}
-  keywords = ["ST", "conformation", "spatial", "HiC", "gene location"]
+  keywords = []
 
 [project.urls]
   Homepage = "https://github.com/YifeiSheng/CRUST"

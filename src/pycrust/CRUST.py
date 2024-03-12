@@ -11,7 +11,9 @@ from pycrust import model
 from pycrust import util
 from pycrust.stereopy import *
 from pycrust.rigid import *
+import warnings
 
+warnings.filterwarnings("ignore")
 
 """
 This module implements main function.
@@ -541,7 +543,7 @@ def CRUST(
     ### processing gtf
     if species == "Mouse" or species == "Mice":
         gtf_file = os.path.dirname(os.path.realpath(__file__)) + "/gtf/mice_genes.gtf"
-    elif species == "Axolotls":
+    elif species == "Axolotls" or species == "Axolotl":
         gtf_file = (
             os.path.dirname(os.path.realpath(__file__))
             + "/gtf/AmexT_v47-AmexG_v6.0-DD.gene.gtf"
@@ -570,7 +572,7 @@ def CRUST(
                             or species == "Monkey"
                         ):
                             gene_symbol = gene_names[2].split()[1].strip('"')
-                        elif species == "Axolotls":
+                        elif species == "Axolotls" or species == "Axolotl":
                             gene_symbol = gene_names[1].split()[1].strip('"')
                         gene_chr[chrom].append(gene_symbol)
                     except IndexError:
@@ -669,7 +671,7 @@ def parse_args():
         "species",
         type=str,
         help="Species of the input data, e.g. Human, Mouse",
-        choices=["Human", "Mouse", "Axolotls", "Monkey"],
+        choices=["Human", "Mouse", "Mice", "Axolotls", "Axolotl", "Monkey"],
     )
     parser.add_argument(
         "-p",
@@ -727,16 +729,21 @@ def main():
         seed = random.randint(0, 1000)
 
     #################### RUNNING ####################
-    if (
-        args.celltype is not None and args.ctkey is not None and args.cikey is not None
-    ):  # run multiple cell types
+    if args.celltype is not None:  # run multiple cell types
         print("Cell types have been set (path is %s)" % args.celltype + "\n")
         gem = read_gem_as_csv(args.gem_path, sep=args.sep)
         celltype = pd.read_csv(args.celltype, sep=args.csep, dtype=str)
+        print(celltype[args.ctkey].drop_duplicates())
+        # process cell types
         for ct in celltype[args.ctkey].drop_duplicates():
             ct_legal = legalname(ct)
             gem_ct_path = args.gem_path + "." + args.ctkey + "." + ct_legal + ".tsv"
-            cellids = celltype[celltype[args.ctkey] == ct][args.cikey].values
+            print(args.cikey)
+            if args.cikey is not None:
+                cellids = celltype[celltype[args.ctkey] == ct][args.cikey].values
+            else:
+                cellids = celltype[celltype[args.ctkey] == ct].index.values.astype(str)
+                print(cellids)
             gem[gem.CellID.isin(cellids)].to_csv(gem_ct_path, sep="\t", index=False)
             try:
                 CRUST(
