@@ -243,6 +243,121 @@ def filterGenes(array, Genes, threshold):
     return new_array, Genes
 
 
+def gene_chr(species):
+    if species == "Mouse" or species == "Mice":
+        gtf_file = (
+            os.path.dirname(os.path.realpath(__file__)) + "/gtf/mice_genes.gene.gtf"
+        )
+    elif species == "Axolotls" or species == "Axolotl":
+        gtf_file = (
+            os.path.dirname(os.path.realpath(__file__))
+            + "/gtf/AmexT_v47-AmexG_v6.0-DD.gene.gtf"
+        )
+    elif species == "Human" or species == "Monkey":
+        gtf_file = (
+            os.path.dirname(os.path.realpath(__file__))
+            + "/gtf/gencode.v44.basic.annotation.gene.gtf"
+        )
+    gene_chr = {}
+    with open(gtf_file, "r") as f:
+        for line in f:
+            if not line.startswith("#"):
+                inf = line.strip().split("\t")
+                if inf[2] == "gene":
+                    chrom = inf[0]
+                    if chrom not in gene_chr.keys():
+                        gene_chr[chrom] = []
+                    gene_names = inf[8].split(";")
+                    try:
+                        if (
+                            species == "Mouse"
+                            or species == "Mice"
+                            or species == "Human"
+                            or species == "Monkey"
+                        ):
+                            gene_symbol = gene_names[2].split()[1].strip('"')
+                        elif species == "Axolotls":
+                            gene_symbol = gene_names[1].split()[1].strip('"')
+                        gene_chr[gene_symbol] = chrom
+                    except IndexError:
+                        print("IndexError")
+                        pass
+    return gene_chr
+
+
+def gene_gene_distance_matrix(X):
+    GeneList = X.index
+    N = len(GeneList)
+    DM = np.zeros((N, N))
+    for n, _ in tqdm(enumerate(GeneList)):
+        for m, _ in enumerate(GeneList[: n + 1]):
+            d = np.linalg.norm(X.iloc[n] - X.iloc[m])
+            DM[n, m] = DM[m, n] = d
+    return DM
+
+
+def RMSD_distance_matrix(Xs, GeneLists, keys, ngene=100):
+    N = len(keys)
+    DM = np.zeros((N, N))
+
+    for n, key_n in tqdm(enumerate(keys)):
+        for m, key_m in enumerate(keys[: n + 1]):
+            intersected_values = np.intersect1d(GeneLists[key_n], GeneLists[key_m])[
+                :ngene
+            ]
+            boolean_arrays_n = np.in1d(GeneLists[key_n], intersected_values)
+            boolean_arrays_m = np.in1d(GeneLists[key_m], intersected_values)
+            normalized_x_n = normalizeX(Xs[key_n][boolean_arrays_n], method="mean")
+            normalized_x_m = normalizeX(Xs[key_m][boolean_arrays_m], method="mean")
+            d1, _, _ = numpy_svd_rmsd_rot(normalized_x_n, normalized_x_m)
+            d2, _, _ = numpy_svd_rmsd_rot(mirror(normalized_x_n), normalized_x_m)
+            DM[n, m] = DM[m, n] = min(d1, d2)
+    return DM
+
+
+def mirror(X):
+    mirrorX = np.copy(X)
+    mirrorX[:, 2] = -mirrorX[:, 2]
+    return mirrorX
+
+
+def euclidean_distance(coord1, coord2):
+    distance = math.sqrt(sum([(x1 - x2) ** 2 for x1, x2 in zip(coord1, coord2)]))
+    return distance
+
+def knn_neighbors(X, k):
+    if k != 0:
+        knn_m = np.zeros((X.shape[0], X.shape[0]))
+        for i in range(X.shape[0]):
+            ids = np.argpartition(X[i], -k)[-k:]
+            top_set = set(X[i, ids])
+            if len(top_set) == 1:
+                b = X[i] == top_set.pop()
+                ids = []
+                offset = 1
+                left = True
+                while (len(ids) < k) and (offset < X.shape[0]):
+                # while len(ids) < k:
+                    if left:
+                        idx = i + offset
+                    else:
+                        idx = i - offset
+                    if idx < 0 or idx > len(b)-1:
+                        offset += 1
+                        left = not left
+                        continue
+                    if b[idx]:
+                        ids.append(idx)
+                    offset += 1
+                    left = not left
+            knn_m[i, ids] = 1
+
+        knn_m = (knn_m + knn_m.T)/2
+        knn_m[np.nonzero(knn_m)] = 1
+    else:
+        knn_m = X
+    return knn_m
+    
 def write_pdb(show_X, genechr, geneLst, write_path, sp, seed, prefix="chain"):
     if sp == "Axolotls":
         uniquechains = [
@@ -541,43 +656,7 @@ def CRUST(
     )
 
     ### processing gtf
-    if species == "Mouse" or species == "Mice":
-        gtf_file = os.path.dirname(os.path.realpath(__file__)) + "/gtf/mice_genes.gtf"
-    elif species == "Axolotls" or species == "Axolotl":
-        gtf_file = (
-            os.path.dirname(os.path.realpath(__file__))
-            + "/gtf/AmexT_v47-AmexG_v6.0-DD.gene.gtf"
-        )
-    elif species == "Human" or species == "Monkey":
-        gtf_file = (
-            os.path.dirname(os.path.realpath(__file__))
-            + "/gtf/gencode.v44.basic.annotation.gene.gtf"
-        )
-
-    gene_chr = {}
-    with open(gtf_file, "r") as f:
-        for line in f:
-            if not line.startswith("#"):
-                inf = line.strip().split("\t")
-                if inf[2] == "gene":
-                    chrom = inf[0]
-                    if chrom not in gene_chr.keys():
-                        gene_chr[chrom] = []
-                    gene_names = inf[8].split(";")
-                    try:
-                        if (
-                            species == "Mouse"
-                            or species == "Mice"
-                            or species == "Human"
-                            or species == "Monkey"
-                        ):
-                            gene_symbol = gene_names[2].split()[1].strip('"')
-                        elif species == "Axolotls" or species == "Axolotl":
-                            gene_symbol = gene_names[1].split()[1].strip('"')
-                        gene_chr[chrom].append(gene_symbol)
-                    except IndexError:
-                        print("IndexError")
-                        pass
+    gene_chr = gene_chr(species)
 
     ##### generate random RM and derive X
     # adata
