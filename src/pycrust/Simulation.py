@@ -11,26 +11,26 @@ from pycrust.CRUST import *
 from pycrust.model import BasisShapeModel
 
 
-# def DeriveRotation(W, X, Mask):
-#    F = int(W.shape[0] / 2)
-#    Rotation = np.zeros((F, 3, 3))
-#    # I = np.array([[1, 0, 0], [0, 1, 0], [0, 0, -1]])
-#    for i in range(F):
-#        # filter genes
-#        Wi = W[:, Mask[i, :]]
-#        # filter cells
-#        Wi_filter = Wi[~np.isnan(Wi).any(axis=1), :]
-#        while Wi_filter.shape[0] < 6:
-#            Mask[i, :] = change_last_true(Mask[i, :])
-#            Wi = W[:, Mask[i, :]]
-#            # filter cells
-#            Wi_filter = Wi[~np.isnan(Wi).any(axis=1), :]
-#        idx = int(find_subarray(Wi_filter, Wi[i * 2]) / 2)
-#        Xi = X[Mask[i, :], :]
-#        model = factor(Wi_filter)
-#        _, R, _ = numpy_svd_rmsd_rot(np.dot(model.Rs[idx], model.Ss[0]).T, Xi)
-#        Rotation[i] = R
-#    return Rotation
+def DeriveRotation(W, X, Mask):
+    F = int(W.shape[0] / 2)
+    Rotation = np.zeros((F, 3, 3))
+    # I = np.array([[1, 0, 0], [0, 1, 0], [0, 0, -1]])
+    for i in range(F):
+        # filter genes
+        Wi = W[:, Mask[i, :]]
+        # filter cells
+        Wi_filter = Wi[~np.isnan(Wi).any(axis=1), :]
+        while Wi_filter.shape[0] < 6:
+            Mask[i, :] = change_last_true(Mask[i, :])
+            Wi = W[:, Mask[i, :]]
+            # filter cells
+            Wi_filter = Wi[~np.isnan(Wi).any(axis=1), :]
+        idx = int(find_subarray(Wi_filter, Wi[i * 2]) / 2)
+        Xi = X[Mask[i, :], :]
+        model = factor(Wi_filter)
+        _, R, _ = numpy_svd_rmsd_rot(np.dot(model.Rs[idx], model.Ss[0]).T, Xi)
+        Rotation[i] = R
+    return Rotation
 
 
 # def UpdateX(RM, W):
@@ -307,9 +307,9 @@ def main():
     TID = generate_id()
 
     # start logging
-    stdout = sys.stdout
-    log_file = open(outpath + "/" + TID + ".log", "w")
-    sys.stdout = log_file
+    # stdout = sys.stdout
+    # log_file = open(outpath + "/" + TID + ".log", "w")
+    # sys.stdout = log_file
     print(f"The seed is {seed}.")
 
     ##### GENERATE SIMULATION DATA
@@ -420,10 +420,10 @@ def main():
 
     # read input gem
     models = []
-    GeneUIDs = pd.Series(
+    X = pd.Series(
         sorted(gem.geneID.drop_duplicates(), key=lambda fname: int(fname.strip("gene")))
     )
-    Ngene = len(GeneUIDs)
+    Ngene = len(X)
     print(
         "TASK ID: "
         + TID
@@ -452,15 +452,13 @@ def main():
     )
 
     ##### update X
-    W = genedistribution(gem, gem.CellID.drop_duplicates().values, GeneUIDs)
+    W = genedistribution(gem, gem.CellID.drop_duplicates().values, X)
     W = normalizeW(W)
     # get rotation R through shared X and input W
     RM = generate_random_rotation_matrices(int(W.shape[0] / 2))
     CellUIDs = list(gem.CellID.drop_duplicates())
-    Mask = MASK(
-        gem, GeneIDs=GeneUIDs, CellIDs=CellUIDs, Ngene=Ngene_for_rotation_derivation
-    )
-    X, _, _ = UpdateX(RM, W)
+    Mask = MASK(gem, GeneIDs=X, CellIDs=CellUIDs, Ngene=Ngene_for_rotation_derivation)
+    X, _, _ = UpdateX(RM, W, X)
     write_sim_pdb(
         scale_X(X, 0.5)[0],
         prefix=TID
@@ -477,9 +475,9 @@ def main():
     )
     try:
         for loop in range(30):
-            RM, _, _, _ = DeriveRotation(W, X, Mask)
+            RM = DeriveRotation(W, X, Mask)
             try:
-                X = UpdateX(RM, W)
+                X, _, _ = UpdateX(RM, W, X)
             except np.linalg.LinAlgError:
                 return "numpy.linalg.LinAlgError"
             rmsd1, _, _ = numpy_svd_rmsd_rot(
@@ -515,7 +513,7 @@ def main():
                 + "times",
                 outpath=outpath,
             )
-            if minrmsd < 0.2:
+            if minrmsd < 0.005:
                 break
     except Exception as error:
         print(error)
@@ -534,7 +532,8 @@ def main():
             "NA",
             "NA",
         )
-        write_row_to_csv(csv, row)
+        if not csv == None:
+            write_row_to_csv(csv, row)
         sys.exit(1)
 
     ####### evaluation
@@ -562,8 +561,8 @@ def main():
     )
 
     # stop logging
-    sys.stdout = stdout
-    log_file.close()
+    # sys.stdout = stdout
+    # log_file.close()
 
     row = (
         TID,
@@ -581,7 +580,8 @@ def main():
         str(scipy.stats.spearmanr(S_.flatten(), S.flatten())[0]),
     )
 
-    write_row_to_csv(csv, row)
+    if not csv == None:
+        write_row_to_csv(csv, row)
 
 
 if __name__ == "__main__":
