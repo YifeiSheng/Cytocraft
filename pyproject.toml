@@ -7,9 +7,9 @@
     "/demo",
   ]
 [tool.hatch.build.targets.wheel]
-  packages = ["src/pycrust"]
+  packages = ["src/cytocraft"]
 [project]
-  name = "pycrust"
+  name = "cytocraft"
   version = "1.0.0"
   dependencies = ["scanpy","shapely"]
   authors = [
@@ -17,7 +17,7 @@
     { name="Shiying Li", email="shiyingli7-c@my.cityu.edu.hk"},
     { name="Shuai Cheng Li", email="sc.li@cityu.edu.hk"},
   ]
-  description = "The CRUST package provides prediction of chromosome conformation based on spatial transcriptomic."
+  description = "The Cytocraft package provides prediction of chromosome conformation based on spatial transcriptomic."
   readme = {file="README.md", content-type= "text/markdown"}
   requires-python = ">=3.8"
   classifiers = [
@@ -32,6 +32,6 @@
   keywords = []
 
 [project.urls]
-  Homepage = "https://github.com/YifeiSheng/CRUST"
-  Issues = "https://github.com/YifeiSheng/CRUST/issues"
-  Repository = "https://github.com/YifeiSheng/CRUST.git"
+  Homepage = "https://github.com/YifeiSheng/Cytocraft"
+  Issues = "https://github.com/YifeiSheng/Cytocraft/issues"
+  Repository = "https://github.com/YifeiSheng/Cytocraft.git"

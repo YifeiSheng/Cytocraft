@@ -1,22 +1,22 @@
 <p align="center">
-	<img width="712" height="342" src=https://github.com/YifeiSheng/CRUST/blob/main/figure/Figure1.png>
+	<img width="712" height="342" src=https://github.com/YifeiSheng/Cytocraft/blob/main/figure/Figure1.png>
 </p>
 
-# CRUST (Conformation Reconstruction Using Spatial Transcriptomics)
+# Cytocraft
 
-The CRUST package provides prediction of chromosome conformation based on spatial transcriptomic.
+The Cytocraft package provides prediction of chromosome conformation based on spatial transcriptomic.
 
 ## Quick Start
 
-### Run CRUST
+### Run Cytocraft
 
-This example shows the usage of CRUST.
+This example shows the usage of Cytocraft.
 
-	python CRUST.py ./data/SS200000108BR_A3A4_scgem.Spinal_cord_neuron.csv ./results/ Mouse
+	python craft.py ./data/SS200000108BR_A3A4_scgem.Spinal_cord_neuron.csv ./results/ Mouse
 
 ## Usage
 
-CRUST.py [-h] [-p PERCENT] [-c CELLTYPE] [--ctkey CTKEY] [--cikey CIKEY] [--seed SEED] gem_path out_path {Human,Mouse,Axolotls,Monkey}
+craft.py [-h] [-p PERCENT] [-c CELLTYPE] [--ctkey CTKEY] [--cikey CIKEY] [--seed SEED] gem_path out_path {Human,Mouse,Axolotls,Monkey}
 
 ### positional arguments:
 
