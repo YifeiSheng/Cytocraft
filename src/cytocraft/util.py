@@ -1,4 +1,6 @@
-"""Utility functions."""
+"""
+    Utility functions.
+"""
 
 import numpy as np
 import random, pickle

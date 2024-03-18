@@ -1,5 +1,5 @@
 <p align="center">
-	<img width="712" height="342" src=https://github.com/YifeiSheng/Cytocraft/blob/main/figure/Figure1.png>
+	<img width="712" height="342" src=https://github.com/YifeiSheng/Cytocraft/raw/main/figure/Figure1.png>
 </p>
 
 # Cytocraft

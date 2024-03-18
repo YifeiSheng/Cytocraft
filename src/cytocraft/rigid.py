@@ -1,9 +1,9 @@
 from math import cos, sin
 import numpy as np
 from numpy.linalg import svd, solve, lstsq
-from pycrust import model
-from pycrust import util
-from pycrust.model import BasisShapeModel
+from cytocraft import model
+from cytocraft import util
+from cytocraft.model import BasisShapeModel
 
 """
 This module implements rigid factorization.

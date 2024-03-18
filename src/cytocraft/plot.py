@@ -20,10 +20,10 @@ from tqdm import tqdm
 import warnings
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
-from crust_st.CRUST import *
-from crust_st import model
-from crust_st import util
-from crust_st.model import BasisShapeModel
+from cytocraft.craft import *
+from cytocraft import model
+from cytocraft import util
+from cytocraft.model import BasisShapeModel
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from scipy.cluster.hierarchy import fcluster
