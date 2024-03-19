@@ -91,7 +91,7 @@ def DeriveRotation(W, X, Mask, CellUIDs, adata):
             _, R, _ = numpy_svd_rmsd_rot(np.dot(model.Rs[idx], model.Ss[0]).T, Xi)
             Rotation[i] = R
         except Exception as err:
-            print("Cell No." + str(i + 1) + " is removed due to: ", err)
+            print("Cell ID" + str(CellUIDs[i]) + " is removed due to: ", err)
             pop_indices.append(i)
     for i in sorted(pop_indices, reverse=True):
         Rotation = np.delete(Rotation, obj=i, axis=0)
@@ -243,10 +243,11 @@ def filterGenes(array, Genes, threshold):
     return new_array, Genes
 
 
-def gene_chr(species):
+def get_gene_chr(species):
     if species == "Mouse" or species == "Mice":
         gtf_file = (
-            os.path.dirname(os.path.realpath(__file__)) + "/gtf/mice_genes.gene.gtf"
+            os.path.dirname(os.path.realpath(__file__))
+            + "/gtf/gencode.vM34.annotation.gene.gtf"
         )
     elif species == "Axolotls" or species == "Axolotl":
         gtf_file = (
@@ -497,6 +498,15 @@ def read_gem_as_csv(path, sep="\t"):
     return gem
 
 
+def read_gem_as_adata(gem_path, sep="\t", SN="adata"):
+    data = read_gem(file_path=gem_path, bin_type="cell_bins", sep=sep)
+    data.tl.raw_checkpoint()
+    adata = stereo_to_anndata(
+        data, flavor="scanpy", sample_id=SN, reindex=False, output=None
+    )
+    return adata
+
+
 def change_last_true(arr):
     # Find the index of the last True value
     last_true_index = np.where(arr == True)[0][-1]
@@ -585,22 +595,37 @@ def normalizeX(x, method="mean"):
         return x / r
 
 
-def craft(
+def get_GeneUID(gem):
+    return list(
+        gem.groupby(["geneID"])["MIDCount"]
+        .count()
+        .reset_index(name="Count")
+        .sort_values(["Count"], ascending=False)
+        .geneID
+    )
+
+
+def get_CellUID(gem):
+    return list(gem.CellID.drop_duplicates())
+
+
+def run_craft(
     gem_path,
     species,
     seed,
-    threshold_for_gene_filter,
-    percent_of_gene_for_rotation_derivation,
     out_path,
     sep,
+    threshold_for_gene_filter=0.9,
+    threshold_for_rmsd=0.25,
+    number_of_gene_for_rotation_derivation=None,
+    percent_of_gene_for_rotation_derivation=0.001,
 ):
     # set seed
     random.seed(seed)
     np.random.seed(seed)
     #################### INIT ####################
     models = []
-    filename, _ = os.path.splitext(gem_path)
-    SN = os.path.basename(filename)
+    SN = os.path.basename(os.path.splitext(gem_path)[0])
     TID = generate_id()
     outpath = out_path + "/" + SN + "_" + TID + "/"
 
@@ -610,28 +635,59 @@ def craft(
     stdout = sys.stdout
     log_file = open(outpath + "/" + SN + "_" + TID + ".log", "w")
     sys.stdout = log_file
-
-    #################### PROCESSING #####################
     # read input gem
     gem = read_gem_as_csv(gem_path, sep=sep)
-
-    GeneUIDs = list(
-        gem.groupby(["geneID"])["MIDCount"]
-        .count()
-        .reset_index(name="Count")
-        .sort_values(["Count"], ascending=False)
-        .geneID
+    adata = read_gem_as_adata(gem_path, sep=sep, SN=SN)
+    GeneUIDs = get_GeneUID(gem)
+    if number_of_gene_for_rotation_derivation is None:
+        Ngene_for_derivation = int(
+            percent_of_gene_for_rotation_derivation * len(GeneUIDs)
+        )
+    adata = craft(
+        gem=gem,
+        adata=adata,
+        species=species,
+        nderive=Ngene_for_derivation,
+        thresh=threshold_for_gene_filter,
+        thresh_rmsd=threshold_for_rmsd,
+        seed=seed,
+        samplename=SN,
+        outpath=outpath,
     )
-    CellUIDs = list(gem.CellID.drop_duplicates())
+
+    #################### SAVING #####################
+    adata.write_h5ad(filename=outpath + "adata.h5ad")
+
+    # stop logging
+    sys.stdout = stdout
+    log_file.close()
+
+
+def craft(
+    gem,
+    adata,
+    species,
+    nderive=10,
+    thresh=0.9,
+    thresh_rmsd=0.25,
+    seed=999,
+    samplename=None,
+    outpath=False,
+):
+    # set seed
+    random.seed(seed)
+    np.random.seed(seed)
+    TID = generate_id()
+    # run cytocraft
+    GeneUIDs = get_GeneUID(gem)
+    CellUIDs = get_CellUID(gem)
+
+    print("Speceis: " + species)
+    if samplename:
+        print("Sample Name: " + samplename)
 
     print(
-        "Speceis: "
-        + species
-        + "\n"
-        + "File Name:"
-        + filename
-        + "\n"
-        + "Seed: "
+        "Seed: "
         + str(seed)
         + "\n"
         + "Cell Number: "
@@ -640,60 +696,48 @@ def craft(
         + "Gene Number: "
         + str(len(GeneUIDs))
         + "\n"
-        + "Sample Name: "
-        + SN
-        + "\n"
         + "Threshold for gene filter is: "
-        + str(threshold_for_gene_filter)
+        + str(thresh)
         + "\n"
-        + "Proportion of genes used for Rotation Derivation is: "
-        + str(percent_of_gene_for_rotation_derivation)
+        + "Number of genes used for Rotation Derivation is: "
+        + str(nderive)
         + "\n"
         + "Task ID: "
         + TID
         + "\n"
     )
-    Ngene_for_rotation_derivation = int(
-        percent_of_gene_for_rotation_derivation * len(GeneUIDs)
-    )
 
-    ### processing gtf
-    gene_chr = gene_chr(species)
+    # processing gtf
+    gene_chr = get_gene_chr(species)
 
-    ##### generate random RM and derive X
-    # adata
-    data = read_gem(file_path=gem_path, bin_type="cell_bins", sep=sep)
-    data.tl.raw_checkpoint()
-    adata = stereo_to_anndata(
-        data, flavor="scanpy", sample_id=SN, reindex=False, output=None
-    )
     # generate and normalize W
     W = genedistribution(gem, CellUIDs, GeneUIDs)
-    W, GeneUIDs = filterGenes(W, GeneUIDs, threshold=threshold_for_gene_filter)
+    W, GeneUIDs = filterGenes(W, GeneUIDs, threshold=thresh)
     W = normalizeW(W)
     # generate random Rotation Matrix
     RM = generate_random_rotation_matrices(int(W.shape[0] / 2))
     X, W, GeneUIDs = UpdateX(RM, W, GeneUIDs)
-    write_pdb(
-        X,
-        gene_chr,
-        GeneUIDs,
-        write_path=outpath,
-        sp=species,
-        seed=seed,
-        prefix=SN + "_initial_chr",
-    )
-    ##### update X
+    if outpath:
+        write_pdb(
+            X,
+            gene_chr,
+            GeneUIDs,
+            write_path=outpath,
+            sp=species,
+            seed=seed,
+            prefix=samplename + "_initial_chr",
+        )
+    # update X
     for loop in range(30):
-        # step1: derive Rotation Matrix
+        ## step1: derive Rotation Matrix
         Mask = MASK(
             gem,
             GeneIDs=GeneUIDs,
             CellIDs=CellUIDs,
-            Ngene=Ngene_for_rotation_derivation,
+            Ngene=nderive,
         )
         RM, W, CellUIDs, adata = DeriveRotation(W, X, Mask, CellUIDs, adata)
-        # step2: update conformation X with RM and W
+        ## step2: update conformation X with RM and W
         try:
             newX, W, GeneUIDs, X = UpdateX(RM, W, GeneUIDs, X)
         except np.linalg.LinAlgError:
@@ -707,32 +751,27 @@ def craft(
             + " is: "
             + str(rmsd)
         )
-        write_pdb(
-            newX,
-            gene_chr,
-            GeneUIDs,
-            write_path=outpath,
-            sp=species,
-            seed=seed,
-            prefix=SN + "_updated" + str(loop + 1) + "times_chr",
-        )
-        ## keep looping until X converges
+        if outpath:
+            write_pdb(
+                newX,
+                gene_chr,
+                GeneUIDs,
+                write_path=outpath,
+                sp=species,
+                seed=seed,
+                prefix=SN + "_updated" + str(loop + 1) + "times_chr",
+            )
+        ## step3: check if conformation converges
         X = newX
-        if rmsd < 0.25:
+        if rmsd < thresh_rmsd:
             break
-
-    #################### SAVING #####################
     print("Number of total Transcription centers is: " + str(X.shape[0]))
 
     adata.obsm["Rotation"] = RM
     adata.uns["X"] = pd.DataFrame(X, index=GeneUIDs)
     adata.uns["X"].columns = adata.uns["X"].columns.astype(str)
     adata.uns["W"] = W
-    adata.write_h5ad(filename=outpath + "adata.h5ad")
-
-    # stop logging
-    sys.stdout = stdout
-    log_file.close()
+    return adata
 
 
 def parse_args():
@@ -759,14 +798,28 @@ def parse_args():
         "--percent",
         type=float,
         help="percent of gene for rotation derivation, default: 0.001",
-        default=0.001,
+        default=None,
+    )
+    parser.add_argument(
+        "-n",
+        "--number",
+        type=int,
+        help="number of gene for rotation derivation, recommend: 10",
+        default=None,
     )
     parser.add_argument(
         "-t",
-        "--threshold",
+        "--gene_filter_thresh",
         type=float,
         help="The maximum proportion of np.nans allowed in a column(gene) in W",
         default=0.90,
+    )
+    parser.add_argument(
+        "-r",
+        "--rmsd_thresh",
+        type=float,
+        help="The maximum value of cvRMSD allowed in conformation convergence",
+        default=0.25,
     )
     parser.add_argument(
         "--sep", type=str, help="input gem file separator", default="\t"
@@ -775,7 +828,7 @@ def parse_args():
         "-c",
         "--celltype",
         type=str,
-        help="Path of file containing cell types",
+        help="Path of obs file containing cell types",
     )
     parser.add_argument(
         "--ctkey",
@@ -801,6 +854,22 @@ def parse_args():
     return args
 
 
+def split_gem(gem_path, celltype, ctkey, cikey, gsep):
+    split_gem_paths = {}
+    gem = read_gem_as_csv(gem_path, sep=gsep)
+    for ct in celltype[ctkey].drop_duplicates():
+        ct_legal = legalname(ct)
+        gem_ct_path = gem_path + "." + ctkey + "." + ct_legal + ".tsv"
+        split_gem_paths[ct] = gem_ct_path
+        print("split gem path of " + ct + " : " + gem_ct_path)
+        if cikey is not None:
+            cellids = celltype[celltype[ctkey] == ct][cikey].values.astype(str)
+        else:
+            cellids = celltype[celltype[ctkey] == ct].index.values.astype(str)
+        gem[gem.CellID.isin(cellids)].to_csv(gem_ct_path, sep="\t", index=False)
+    return split_gem_paths
+
+
 def main():
     #################### SETTINGS ####################
     args = parse_args()
@@ -809,32 +878,32 @@ def main():
     else:
         seed = random.randint(0, 1000)
 
-    #################### RUNNING ####################
+    #################### RUNNING #####################
     if args.celltype is not None:  # run multiple cell types
         print("Cell types have been set (path is %s)" % args.celltype + "\n")
-        gem = read_gem_as_csv(args.gem_path, sep=args.sep)
-        celltype = pd.read_csv(args.celltype, sep=args.csep, dtype=str)
-        print(celltype[args.ctkey].drop_duplicates())
-        # process cell types
-        for ct in celltype[args.ctkey].drop_duplicates():
-            ct_legal = legalname(ct)
-            gem_ct_path = args.gem_path + "." + args.ctkey + "." + ct_legal + ".tsv"
-            print(args.cikey)
-            if args.cikey is not None:
-                cellids = celltype[celltype[args.ctkey] == ct][args.cikey].values
-            else:
-                cellids = celltype[celltype[args.ctkey] == ct].index.values.astype(str)
-                print(cellids)
-            gem[gem.CellID.isin(cellids)].to_csv(gem_ct_path, sep="\t", index=False)
+        # read gem and obs
+        obs = pd.read_csv(args.celltype, sep=args.csep, dtype=str)
+        # split gem
+        split_paths = split_gem(
+            args.gem_path,
+            celltype=obs,
+            ctkey=args.ctkey,
+            cikey=args.cikey,
+            gsep=args.sep,
+        )
+        # run cytocraft by order
+        for ct, ct_path in split_paths.items():
             try:
-                craft(
-                    gem_ct_path,
-                    args.species,
-                    seed,
-                    args.threshold,
-                    args.percent,
-                    args.out_path,
+                run_craft(
+                    gem_path=ct_path,
+                    species=args.species,
+                    seed=seed,
+                    out_path=args.out_path,
                     sep="\t",
+                    threshold_for_gene_filter=args.gene_filter_thresh,
+                    threshold_for_rmsd=args.rmsd_thresh,
+                    number_of_gene_for_rotation_derivation=args.number,
+                    percent_of_gene_for_rotation_derivation=args.percent,
                 )
             except Exception as error:
                 print(error)
@@ -844,14 +913,16 @@ def main():
                 print(ct + ": conformation reconstruction finished.")
     else:  # run single cell type
         try:
-            craft(
-                args.gem_path,
-                args.species,
-                seed,
-                args.threshold,
-                args.percent,
-                args.out_path,
-                args.sep,
+            run_craft(
+                gem_path=args.gem_path,
+                species=args.species,
+                seed=seed,
+                out_path=args.out_path,
+                sep=args.sep,
+                threshold_for_gene_filter=args.gene_filter_thresh,
+                threshold_for_rmsd=args.rmsd_thresh,
+                number_of_gene_for_rotation_derivation=args.number,
+                percent_of_gene_for_rotation_derivation=args.percent,
             )
         except Exception as error:
             print(error)

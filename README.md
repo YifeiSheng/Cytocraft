@@ -1,10 +1,18 @@
-<p align="center">
-	<img src=https://github.com/YifeiSheng/Cytocraft/raw/main/figure/Figure1.png>
-</p>
-
 # Cytocraft
 
+<p align="center">
+	<img src=https://github.com/YifeiSheng/Cytocraft/raw/main/figure/Figure1.Overview.png>
+</p>
+
+## Overview
+
 The Cytocraft package provides prediction of chromosome conformation based on spatial transcriptomic.
+
+## Installaion
+
+```
+pip install cytocraft
+```
 
 ## Quick Start
 
@@ -15,9 +23,9 @@ This example shows the usage of Cytocraft.
 	python craft.py ./data/SS200000108BR_A3A4_scgem.Spinal_cord_neuron.csv ./results/ Mouse
 
 ## Usage
-
-craft.py [-h] [-p PERCENT] [-c CELLTYPE] [--ctkey CTKEY] [--cikey CIKEY] [--seed SEED] gem_path out_path {Human,Mouse,Axolotls,Monkey}
-
+```
+python craft.py [-h] [-p PERCENT] [-c CELLTYPE] [--ctkey CTKEY] [--cikey CIKEY] [--seed SEED] gem_path out_path {Human,Mouse,Axolotls,Monkey}
+```
 ### positional arguments:
 
   gem_path              `Path to gem file`
