@@ -52,6 +52,8 @@ def plot_RMSD_heatmap(
     font_scale=1,
     cbbox=(0.07, 0.84, 0.04, 0.12),
     lgbox=(0.86, 0.96, 0.01, 0.01),
+    figsize=(8,8),
+    dpi=300,
 ):
     clustergrid = sns.clustermap(
         D, xticklabels=labels, yticklabels=labels, method=method
@@ -71,7 +73,7 @@ def plot_RMSD_heatmap(
     cluster_colors = [color_map[c - 1] for c in clusters]
 
     # Draw plot
-    sns.set(rc={"figure.dpi": 300, "figure.figsize": (8, 8)}, font_scale=font_scale)
+    sns.set(rc={"figure.dpi": dpi, "figure.figsize": figsize}, font_scale=font_scale)
 
     ax = sns.clustermap(
         D,
@@ -106,12 +108,13 @@ def plot_RMSD_heatmap(
 def plot_network(
     D,
     labels,
-    cmap,
+    cmap="viridis",
     csep="\n",
     solver="barnesHut",
-    corder=1,
+    corder=0,
     N_neighbor=3,
     html="test.html",
+    fontsize=15,
     width=1400,
     height=1000,
     edge_scale=150,
@@ -171,7 +174,7 @@ def plot_network(
         "nodes": {
             "borderWidth": 3,
             "opacity": 1,
-            "font": {"size": 15, "strokeWidth": 5},
+            "font": {"size": fontsize, "strokeWidth": 5},
             "size": 0,
         },
         "edges": {
