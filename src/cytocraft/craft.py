@@ -617,7 +617,7 @@ def run_craft(
     sep,
     threshold_for_gene_filter=0.9,
     threshold_for_rmsd=0.25,
-    number_of_gene_for_rotation_derivation=None,
+    Ngene_for_rotation_derivation=None,
     percent_of_gene_for_rotation_derivation=0.001,
 ):
     # set seed
@@ -639,15 +639,15 @@ def run_craft(
     gem = read_gem_as_csv(gem_path, sep=sep)
     adata = read_gem_as_adata(gem_path, sep=sep, SN=SN)
     GeneUIDs = get_GeneUID(gem)
-    if number_of_gene_for_rotation_derivation is None:
-        Ngene_for_derivation = int(
-            percent_of_gene_for_rotation_derivation * len(GeneUIDs)
+    if Ngene_for_rotation_derivation is None:
+        Ngene_for_rotation_derivation = int(
+            float(percent_of_gene_for_rotation_derivation) * len(GeneUIDs)
         )
     adata = craft(
         gem=gem,
         adata=adata,
         species=species,
-        nderive=Ngene_for_derivation,
+        nderive=Ngene_for_rotation_derivation,
         thresh=threshold_for_gene_filter,
         thresh_rmsd=threshold_for_rmsd,
         seed=seed,
@@ -759,7 +759,7 @@ def craft(
                 write_path=outpath,
                 sp=species,
                 seed=seed,
-                prefix=SN + "_updated" + str(loop + 1) + "times_chr",
+                prefix=samplename + "_updated" + str(loop + 1) + "times_chr",
             )
         ## step3: check if conformation converges
         X = newX
@@ -798,14 +798,14 @@ def parse_args():
         "--percent",
         type=float,
         help="percent of gene for rotation derivation, default: 0.001",
-        default=None,
+        default=0.001,
     )
     parser.add_argument(
         "-n",
         "--number",
         type=int,
         help="number of gene for rotation derivation, recommend: 10",
-        default=None,
+        default=10,
     )
     parser.add_argument(
         "-t",
@@ -902,7 +902,7 @@ def main():
                     sep="\t",
                     threshold_for_gene_filter=args.gene_filter_thresh,
                     threshold_for_rmsd=args.rmsd_thresh,
-                    number_of_gene_for_rotation_derivation=args.number,
+                    Ngene_for_rotation_derivation=args.number,
                     percent_of_gene_for_rotation_derivation=args.percent,
                 )
             except Exception as error:
@@ -921,7 +921,7 @@ def main():
                 sep=args.sep,
                 threshold_for_gene_filter=args.gene_filter_thresh,
                 threshold_for_rmsd=args.rmsd_thresh,
-                number_of_gene_for_rotation_derivation=args.number,
+                Ngene_for_rotation_derivation=args.number,
                 percent_of_gene_for_rotation_derivation=args.percent,
             )
         except Exception as error:
