@@ -297,7 +297,7 @@ def gene_gene_distance_matrix(X):
     return DM
 
 
-def RMSD_distance_matrix(Xs, GeneLists, keys, ngene=100):
+def RMSD_distance_matrix(Xs, GeneLists, keys, ngene=100, method=None):
     N = len(keys)
     DM = np.zeros((N, N))
 
@@ -308,10 +308,13 @@ def RMSD_distance_matrix(Xs, GeneLists, keys, ngene=100):
             ]
             boolean_arrays_n = np.in1d(GeneLists[key_n], intersected_values)
             boolean_arrays_m = np.in1d(GeneLists[key_m], intersected_values)
-            normalized_x_n = normalizeX(Xs[key_n][boolean_arrays_n], method="mean")
-            normalized_x_m = normalizeX(Xs[key_m][boolean_arrays_m], method="mean")
-            d1, _, _ = numpy_svd_rmsd_rot(normalized_x_n, normalized_x_m)
-            d2, _, _ = numpy_svd_rmsd_rot(mirror(normalized_x_n), normalized_x_m)
+            X_n = Xs[key_n][boolean_arrays_n]
+            X_m = Xs[key_m][boolean_arrays_m]
+            if method:
+                X_n = normalizeX(X_n, method=method)
+                X_m = normalizeX(X_m, method=method)
+            d1, _, _ = numpy_svd_rmsd_rot(X_n, X_m)
+            d2, _, _ = numpy_svd_rmsd_rot(mirror(X_n), X_m)
             DM[n, m] = DM[m, n] = min(d1, d2)
     return DM
 
@@ -805,20 +808,20 @@ def parse_args():
         "--number",
         type=int,
         help="number of gene for rotation derivation, recommend: 10",
-        default=10,
+        default=None,
     )
     parser.add_argument(
         "-t",
         "--gene_filter_thresh",
         type=float,
-        help="The maximum proportion of np.nans allowed in a column(gene) in W",
+        help="The maximum proportion of np.nans allowed in a column(gene) in W, default: 0.90",
         default=0.90,
     )
     parser.add_argument(
         "-r",
         "--rmsd_thresh",
         type=float,
-        help="The maximum value of cvRMSD allowed in conformation convergence",
+        help="The maximum value of cvRMSD allowed in conformation convergence, default: 0.25",
         default=0.25,
     )
     parser.add_argument(

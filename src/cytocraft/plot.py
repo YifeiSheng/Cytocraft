@@ -52,7 +52,8 @@ def plot_RMSD_heatmap(
     font_scale=1,
     cbbox=(0.07, 0.84, 0.04, 0.12),
     lgbox=(0.86, 0.96, 0.01, 0.01),
-    figsize=(8,8),
+    ticks=[0, 0.5, 1, 1.5],
+    figsize=(8, 8),
     dpi=300,
 ):
     clustergrid = sns.clustermap(
@@ -83,9 +84,9 @@ def plot_RMSD_heatmap(
         method=method,
         row_colors=[cluster_colors],
         col_colors=[cluster_colors],
-        cbar_kws={"ticks": [0, 0.5, 1, 1.5]},
+        cbar_kws={"ticks": ticks},
     )
-    ax.ax_cbar.set_title("NRMSD")
+    ax.ax_cbar.set_title("RMSD")
     ax.ax_cbar.set_position(cbbox)
 
     # Add legend for row color bar
