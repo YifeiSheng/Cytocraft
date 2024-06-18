@@ -55,7 +55,11 @@ def plot_RMSD_heatmap(
     ticks=[0, 0.5, 1, 1.5],
     figsize=(8, 8),
     dpi=300,
+    legend_ncol=2,
+    mask=None,
 ):
+    import matplotlib.pyplot as plt
+
     clustergrid = sns.clustermap(
         D, xticklabels=labels, yticklabels=labels, method=method
     )
@@ -85,6 +89,7 @@ def plot_RMSD_heatmap(
         row_colors=[cluster_colors],
         col_colors=[cluster_colors],
         cbar_kws={"ticks": ticks},
+        mask=mask,
     )
     ax.ax_cbar.set_title("RMSD")
     ax.ax_cbar.set_position(cbbox)
@@ -101,7 +106,7 @@ def plot_RMSD_heatmap(
         bbox_to_anchor=lgbox,
         bbox_transform=plt.gcf().transFigure,
         loc="upper right",
-        ncol=2,
+        ncol=legend_ncol,
     )
     legend.get_frame().set_facecolor("white")
 

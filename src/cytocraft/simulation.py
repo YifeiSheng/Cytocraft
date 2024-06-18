@@ -360,6 +360,7 @@ def main():
     y = np.arange(LBy, UBy)  # create a 1D array of y values
     xx, yy = np.meshgrid(x, y)  # create a 2D grid of x and y values
     xy = np.stack((xx, yy), axis=-1)  # create a 3D array of (x,y) pairs
+
     # Creat fixed Gaussian noise 3 matrix
     # noise_scale = int(noise / 2)
     # noise_matrix = np.random.normal(0, noise_scale, (UBx - LBx, UBy - LBy))
@@ -480,6 +481,13 @@ def main():
                 X, _, _ = UpdateX(RM, W, X)
             except np.linalg.LinAlgError:
                 return "numpy.linalg.LinAlgError"
+
+            # test
+            # save_data(W, outpath + "/HMEC_W_" + "loop_" + str(loop) + ".pkl")
+            # save_data(X, outpath + "/HMEC_X_" + "loop_" + str(loop) + ".pkl")
+            # save_data(RM, outpath + "/HMEC_RM_" + "loop_" + str(loop) + ".pkl")
+
+            # evaluate
             rmsd1, _, _ = numpy_svd_rmsd_rot(
                 normalizeX(simX, method="mean"), normalizeX(X, method="mean")
             )

@@ -12,6 +12,7 @@ from cytocraft import util
 from cytocraft.stereopy import *
 from cytocraft.rigid import *
 import warnings
+import traceback
 
 warnings.filterwarnings("ignore")
 
@@ -91,7 +92,7 @@ def DeriveRotation(W, X, Mask, CellUIDs, adata):
             _, R, _ = numpy_svd_rmsd_rot(np.dot(model.Rs[idx], model.Ss[0]).T, Xi)
             Rotation[i] = R
         except Exception as err:
-            print("Cell ID" + str(CellUIDs[i]) + " is removed due to: ", err)
+            print("Cell ID [" + str(CellUIDs[i]) + "] is removed due to: ", err)
             pop_indices.append(i)
     for i in sorted(pop_indices, reverse=True):
         Rotation = np.delete(Rotation, obj=i, axis=0)
@@ -143,7 +144,7 @@ def UpdateX(RM, W, GeneUID, *X_old):
             except NameError:
                 newX = np.array([newXi])
         except (np.linalg.LinAlgError, LinAlgWarning) as err:
-            print("Gene No." + str(j + 1) + " is removed due to: ", err)
+            print("Gene No.[" + str(j + 1) + "] is removed due to: ", err)
             pop_indices.append(j)
 
     # Drop genes
@@ -280,8 +281,10 @@ def get_gene_chr(species):
                         elif species == "Axolotls":
                             gene_symbol = gene_names[1].split()[1].strip('"')
                         gene_chr[gene_symbol] = chrom
-                    except IndexError:
-                        print("IndexError")
+                    except IndexError as e:
+                        print(
+                            f"{type(e).__name__} at line {e.__traceback__.tb_lineno} of {__file__}: {e}"
+                        )
                         pass
     return gene_chr
 
@@ -303,9 +306,9 @@ def RMSD_distance_matrix(Xs, GeneLists, keys, ngene=100, method=None):
 
     for n, key_n in tqdm(enumerate(keys)):
         for m, key_m in enumerate(keys[: n + 1]):
-            intersected_values = np.intersect1d(GeneLists[key_n], GeneLists[key_m])[
-                :ngene
-            ]
+            intersected_values = np.intersect1d(GeneLists[key_n], GeneLists[key_m])
+            # print("number of common gene: " + str(len(intersected_values)))
+            intersected_values = intersected_values[:ngene]
             boolean_arrays_n = np.in1d(GeneLists[key_n], intersected_values)
             boolean_arrays_m = np.in1d(GeneLists[key_m], intersected_values)
             X_n = Xs[key_n][boolean_arrays_n]
@@ -634,10 +637,11 @@ def run_craft(
 
     # make dir
     Path(outpath).mkdir(parents=True, exist_ok=True)
+
     # start logging
-    stdout = sys.stdout
     log_file = open(outpath + "/" + SN + "_" + TID + ".log", "w")
     sys.stdout = log_file
+
     # read input gem
     gem = read_gem_as_csv(gem_path, sep=sep)
     adata = read_gem_as_adata(gem_path, sep=sep, SN=SN)
@@ -646,24 +650,31 @@ def run_craft(
         Ngene_for_rotation_derivation = int(
             float(percent_of_gene_for_rotation_derivation) * len(GeneUIDs)
         )
-    adata = craft(
-        gem=gem,
-        adata=adata,
-        species=species,
-        nderive=Ngene_for_rotation_derivation,
-        thresh=threshold_for_gene_filter,
-        thresh_rmsd=threshold_for_rmsd,
-        seed=seed,
-        samplename=SN,
-        outpath=outpath,
-    )
-
-    #################### SAVING #####################
-    adata.write_h5ad(filename=outpath + "adata.h5ad")
-
-    # stop logging
-    sys.stdout = stdout
-    log_file.close()
+    try:
+        adata = craft(
+            gem=gem,
+            adata=adata,
+            species=species,
+            nderive=Ngene_for_rotation_derivation,
+            thresh=threshold_for_gene_filter,
+            thresh_rmsd=threshold_for_rmsd,
+            seed=seed,
+            samplename=SN,
+            outpath=outpath,
+        )
+    except Exception as e:
+        print(
+            f"{type(e).__name__} at line {e.__traceback__.tb_lineno} of {__file__}: {e}",
+            file=sys.stderr,
+        )
+        print("conformation reconstruction failed.", file=sys.stderr)
+        sys.stdout = sys.__stdout__
+        log_file.close()  # stop logging
+    else:
+        print("conformation reconstruction finished.")
+        adata.write_h5ad(filename=outpath + "adata.h5ad")
+        sys.stdout = sys.__stdout__
+        log_file.close()  # stop logging
 
 
 def craft(
@@ -710,17 +721,17 @@ def craft(
         + "\n"
     )
 
-    # processing gtf
+    # reading corresponding gene annotation file as dictionary
     gene_chr = get_gene_chr(species)
 
-    # generate and normalize W
+    # generate and normalize observation TC matrix 'Z'
     W = genedistribution(gem, CellUIDs, GeneUIDs)
     W, GeneUIDs = filterGenes(W, GeneUIDs, threshold=thresh)
     W = normalizeW(W)
-    # generate random Rotation Matrix
+    # generate random Rotation Matrix 'R'
     RM = generate_random_rotation_matrices(int(W.shape[0] / 2))
     X, W, GeneUIDs = UpdateX(RM, W, GeneUIDs)
-    if outpath:
+    if outpath is not False:
         write_pdb(
             X,
             gene_chr,
@@ -730,9 +741,9 @@ def craft(
             seed=seed,
             prefix=samplename + "_initial_chr",
         )
-    # update X
-    for loop in range(30):
-        ## step1: derive Rotation Matrix
+
+    for loop in range(30):  # update conformation F
+        ## step1: derive Rotation Matrix R
         Mask = MASK(
             gem,
             GeneIDs=GeneUIDs,
@@ -740,21 +751,24 @@ def craft(
             Ngene=nderive,
         )
         RM, W, CellUIDs, adata = DeriveRotation(W, X, Mask, CellUIDs, adata)
-        ## step2: update conformation X with RM and W
+        ## step2: update conformation F with R and Z
         try:
             newX, W, GeneUIDs, X = UpdateX(RM, W, GeneUIDs, X)
-        except np.linalg.LinAlgError:
+        except np.linalg.LinAlgError as e:
+            print(
+                f"{type(e).__name__} at line {e.__traceback__.tb_lineno} of {__file__}: {e}"
+            )
             return "numpy.linalg.LinAlgError"
         rmsd, _, _ = numpy_svd_rmsd_rot(
             normalizeX(X, method="mean"), normalizeX(newX, method="mean")
         )
         print(
-            "Distance between X_new and X_old for loop "
+            "RMSD between New Configuration and Old Configuration for loop "
             + str(loop + 1)
             + " is: "
             + str(rmsd)
         )
-        if outpath:
+        if outpath is not False:
             write_pdb(
                 newX,
                 gene_chr,
@@ -764,16 +778,27 @@ def craft(
                 seed=seed,
                 prefix=samplename + "_updated" + str(loop + 1) + "times_chr",
             )
-        ## step3: check if conformation converges
+        # renew conformation F
         X = newX
+
+        ### test: save processing adata ###
+        # adata.obsm["Rotation"] = RM
+        # adata.uns["F"] = pd.DataFrame(X, index=GeneUIDs)
+        # adata.uns["F"].columns = adata.uns["F"].columns.astype(str)
+        # adata.uns["Z"] = W
+        # adata.uns["reconstruction_celllist"] = CellUIDs
+        # adata.write_h5ad(filename=outpath + "loop_" + str(loop) + "_adata.h5ad")
+
+        ## step3: check if conformation converges
         if rmsd < thresh_rmsd:
             break
     print("Number of total Transcription centers is: " + str(X.shape[0]))
 
     adata.obsm["Rotation"] = RM
-    adata.uns["X"] = pd.DataFrame(X, index=GeneUIDs)
-    adata.uns["X"].columns = adata.uns["X"].columns.astype(str)
-    adata.uns["W"] = W
+    adata.uns["F"] = pd.DataFrame(X, index=GeneUIDs)
+    adata.uns["F"].columns = adata.uns["F"].columns.astype(str)
+    adata.uns["Z"] = W
+    adata.uns["reconstruction_celllist"] = CellUIDs
     return adata
 
 
@@ -860,11 +885,11 @@ def parse_args():
 def split_gem(gem_path, celltype, ctkey, cikey, gsep):
     split_gem_paths = {}
     gem = read_gem_as_csv(gem_path, sep=gsep)
-    for ct in celltype[ctkey].drop_duplicates():
+    for ct in celltype[ctkey].dropna().drop_duplicates():
         ct_legal = legalname(ct)
         gem_ct_path = gem_path + "." + ctkey + "." + ct_legal + ".tsv"
         split_gem_paths[ct] = gem_ct_path
-        print("split gem path of " + ct + " : " + gem_ct_path)
+        print("split gem path of " + ct + ": " + gem_ct_path)
         if cikey is not None:
             cellids = celltype[celltype[ctkey] == ct][cikey].values.astype(str)
         else:
@@ -896,24 +921,18 @@ def main():
         )
         # run cytocraft by order
         for ct, ct_path in split_paths.items():
-            try:
-                run_craft(
-                    gem_path=ct_path,
-                    species=args.species,
-                    seed=seed,
-                    out_path=args.out_path,
-                    sep="\t",
-                    threshold_for_gene_filter=args.gene_filter_thresh,
-                    threshold_for_rmsd=args.rmsd_thresh,
-                    Ngene_for_rotation_derivation=args.number,
-                    percent_of_gene_for_rotation_derivation=args.percent,
-                )
-            except Exception as error:
-                print(error)
-                print(ct + ": conformation reconstruction failed.")
-                continue
-            else:
-                print(ct + ": conformation reconstruction finished.")
+            run_craft(
+                gem_path=ct_path,
+                species=args.species,
+                seed=seed,
+                out_path=args.out_path,
+                sep="\t",
+                threshold_for_gene_filter=args.gene_filter_thresh,
+                threshold_for_rmsd=args.rmsd_thresh,
+                Ngene_for_rotation_derivation=args.number,
+                percent_of_gene_for_rotation_derivation=args.percent,
+            )
+            os.remove(ct_path)
     else:  # run single cell type
         try:
             run_craft(
@@ -927,8 +946,10 @@ def main():
                 Ngene_for_rotation_derivation=args.number,
                 percent_of_gene_for_rotation_derivation=args.percent,
             )
-        except Exception as error:
-            print(error)
+        except Exception as e:
+            print(
+                f"{type(e).__name__} at line {e.__traceback__.tb_lineno} of {__file__}: {e}"
+            )
             print("conformation reconstruction failed.")
         else:
             print("conformation reconstruction finished.")
