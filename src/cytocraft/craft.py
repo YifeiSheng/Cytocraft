@@ -309,6 +309,10 @@ def RMSD_distance_matrix(Xs, GeneLists, keys, ngene=100, method=None):
             intersected_values = np.intersect1d(GeneLists[key_n], GeneLists[key_m])
             # print("number of common gene: " + str(len(intersected_values)))
             intersected_values = intersected_values[:ngene]
+            if len(intersected_values) < ngene:
+                print(
+                    f"Warning: {len(intersected_values)} common genes between {key_n} and {key_m} are less than {ngene}"
+                )
             boolean_arrays_n = np.in1d(GeneLists[key_n], intersected_values)
             boolean_arrays_m = np.in1d(GeneLists[key_m], intersected_values)
             X_n = Xs[key_n][boolean_arrays_n]
@@ -688,6 +692,24 @@ def craft(
     samplename=None,
     outpath=False,
 ):
+    """
+    Perform the cytocraft algorithm to generate a 3D reconstruction of transcription centers.
+
+    Parameters:
+    - gem (numpy.ndarray): The gene expression matrix.
+    - adata (AnnData): The annotated data object containing cell and gene information.
+    - species (str): The species of the data.
+    - nderive (int, optional): The number of genes used for rotation derivation. Default is 10.
+    - thresh (float, optional): The threshold for gene filtering. Default is 0.9.
+    - thresh_rmsd (float, optional): The threshold for convergence of the conformation. Default is 0.25.
+    - seed (int, optional): The random seed for reproducibility. Default is 999.
+    - samplename (str, optional): The name of the sample. Default is None.
+    - outpath (bool or str, optional): The output path for writing PDB files. Default is False.
+
+    Returns:
+    - adata (AnnData): The annotated data object with the 3D reconstruction information.
+
+    """
     # set seed
     random.seed(seed)
     np.random.seed(seed)
