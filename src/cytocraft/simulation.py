@@ -33,7 +33,7 @@ def DeriveRotation(W, X, Mask):
     return Rotation
 
 
-# def UpdateX(RM, W):
+# def UpdateF(RM, W):
 #    F = int(W.shape[0] / 2)
 #    for j in range(W.shape[1]):
 #        a1 = b1 = c1 = d1 = a2 = b2 = c2 = d2 = a3 = b3 = c3 = d3 = 0
@@ -453,13 +453,13 @@ def main():
     )
 
     ##### update X
-    W = genedistribution(gem, gem.CellID.drop_duplicates().values, X)
+    W = get_centers(gem, gem.CellID.drop_duplicates().values, X)
     W = normalizeW(W)
     # get rotation R through shared X and input W
     RM = generate_random_rotation_matrices(int(W.shape[0] / 2))
     CellUIDs = list(gem.CellID.drop_duplicates())
     Mask = MASK(gem, GeneIDs=X, CellIDs=CellUIDs, Ngene=Ngene_for_rotation_derivation)
-    X, _, _ = UpdateX(RM, W, X)
+    X, _, _ = UpdateF(RM, W, X)
     write_sim_pdb(
         scale_X(X, 0.5)[0],
         prefix=TID
@@ -478,7 +478,7 @@ def main():
         for loop in range(30):
             RM = DeriveRotation(W, X, Mask)
             try:
-                X, _, _ = UpdateX(RM, W, X)
+                X, _, _ = UpdateF(RM, W, X)
             except np.linalg.LinAlgError:
                 return "numpy.linalg.LinAlgError"
 

@@ -1,3 +1,6 @@
+import warnings
+
+warnings.simplefilter(action="ignore", category=FutureWarning)
 import pickle, copy, importlib, math, os
 import seaborn as sns
 import numpy as np
@@ -5,25 +8,6 @@ import pandas as pd
 import umap
 import scanpy as sc
 from tqdm import tqdm
-
-# from pathlib import Path
-# from scipy import linalg as LA
-# from numpy.linalg import svd, solve, lstsq
-# from math import cos, sin
-# from scipy.sparse import spmatrix, issparse, csr_matrix
-# from anndata import AnnData
-# from typing import Optional, Union
-# from shapely.geometry import Point, MultiPoint
-# from mpl_toolkits.mplot3d import Axes3D
-# from scipy.stats import ttest_ind
-# import itertools
-import warnings
-
-warnings.simplefilter(action="ignore", category=FutureWarning)
-from cytocraft.craft import *
-from cytocraft import model
-from cytocraft import util
-from cytocraft.model import BasisShapeModel
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from scipy.cluster.hierarchy import fcluster

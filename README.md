@@ -6,7 +6,7 @@
 
 ## Overview
 
-The Cytocraft package provides prediction of chromosome conformation based on spatial transcriptomic.
+The Cytocraft package generates a 3D reconstruction of transcription centers with subcellular resolution spatial transcriptomics.
 
 ## Installaion
 
