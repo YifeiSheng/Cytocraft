@@ -358,11 +358,16 @@ def RMSD_distance_matrix(
     N = len(keys)
     DM = np.zeros((N, N))
     if compare_method == "complete":
+        from functools import reduce
+
         intersected_values = reduce(np.intersect1d, GeneLists.values())
+        intersected_values = intersected_values[:ngene]
         if len(intersected_values) < ngene:
             print(
                 f"Warning: {len(intersected_values)} common genes between samples are less than {ngene}"
             )
+    from tqdm import tqdm
+
     for n, key_n in enumerate(tqdm(keys)):
         for m, key_m in enumerate(keys[: n + 1]):
             if compare_method == "pair":

@@ -34,6 +34,7 @@ def plot_RMSD_heatmap(
     method="average",
     cthresh=4.8,
     font_scale=1,
+    legend=True,
     cbbox=(0.07, 0.84, 0.04, 0.12),
     lgbox=(0.86, 0.96, 0.01, 0.01),
     ticks=[0, 0.5, 1, 1.5],
@@ -77,22 +78,27 @@ def plot_RMSD_heatmap(
     )
     ax.ax_cbar.set_title("RMSD")
     ax.ax_cbar.set_position(cbbox)
+    ax.set_xlabel("X Label")
+    ax.set_ylabel("Y Label")
 
-    # Add legend for row color bar
-    from matplotlib.patches import Patch
+    if legend:
+        # Add legend for row color bar
+        from matplotlib.patches import Patch
 
-    lut = dict(zip(clusters, cluster_colors))
-    handles = [Patch(facecolor=lut[name]) for name in sorted(lut)]
-    legend = plt.legend(
-        handles,
-        sorted(lut),
-        title="Clusters",
-        bbox_to_anchor=lgbox,
-        bbox_transform=plt.gcf().transFigure,
-        loc="upper right",
-        ncol=legend_ncol,
-    )
-    legend.get_frame().set_facecolor("white")
+        lut = dict(zip(clusters, cluster_colors))
+        handles = [Patch(facecolor=lut[name]) for name in sorted(lut)]
+        legend = plt.legend(
+            handles,
+            sorted(lut),
+            title="Clusters",
+            bbox_to_anchor=lgbox,
+            bbox_transform=plt.gcf().transFigure,
+            loc="upper right",
+            ncol=legend_ncol,
+        )
+        legend.get_frame().set_facecolor("white")
+
+    return ax
 
 
 def plot_network(
