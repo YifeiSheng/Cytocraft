@@ -78,8 +78,6 @@ def plot_RMSD_heatmap(
     )
     ax.ax_cbar.set_title("RMSD")
     ax.ax_cbar.set_position(cbbox)
-    ax.set_xlabel("X Label")
-    ax.set_ylabel("Y Label")
 
     if legend:
         # Add legend for row color bar
