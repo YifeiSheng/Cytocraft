@@ -18,7 +18,8 @@ import traceback
 warnings.filterwarnings("ignore")
 
 """
-This module implements main functions.
+This module implements main functions of Cytocraft.
+Authors: Yifei Sheng, Shiying Li, Shuai Cheng Li
 """
 
 
@@ -82,7 +83,7 @@ def MASK(gem, GeneIDs, CellIDs, Ngene):
 
 def DeriveRotation(Z, F, Mask, CellUIDs, adata):
     """
-    Derives rotation matrices for each cell based on the given inputs.
+    R-step: Derives rotation matrices for each cell based on the given inputs.
 
     Args:
         Z (numpy.ndarray): The input array of shape (N, M) representing gene expression levels.
@@ -118,7 +119,7 @@ def DeriveRotation(Z, F, Mask, CellUIDs, adata):
             idx = int(find_subarray(Zi_filter, Zi[i * 2]) / 2)
             Fi = F[Mask[i, :], :]
             model = factor(Zi_filter)
-            _, R, _ = numpy_svd_rmsd_rot(np.dot(model.Rs[idx], model.Ss[0]).T, Fi)
+            R = kabsch_numpy(np.dot(model.Rs[idx], model.Ss[0]).T, Fi)[0]
             Rotation[i] = R
         except Exception as err:
             print("Cell ID [" + str(CellUIDs[i]) + "] is removed due to: ", err)
@@ -134,7 +135,7 @@ def DeriveRotation(Z, F, Mask, CellUIDs, adata):
 
 def UpdateF(RM, Z, GeneUID, *F_old):
     """
-    Update the coordinates of configuration based on the given rotation matrices RM and observation matrix of transcription centers Z.
+    F-step: Update the coordinates of configuration based on the given rotation matrices RM and observation matrix of transcription centers Z.
 
     Parameters:
     - RM (numpy.ndarray): A 3-dimensional matrix representing the rotation matrices.
@@ -211,26 +212,39 @@ def UpdateF(RM, Z, GeneUID, *F_old):
         return newF, Z, GeneUID
 
 
-def numpy_svd_rmsd_rot(in_crds1, in_crds2):
+def kabsch_numpy(in_crds1, in_crds2, center=False):
     """
     Returns rmsd and optional rotation between 2 sets of [nx3] arrays.
 
     This requires numpy for svd decomposition.
     The transform direction: transform(m, ref_crd) => target_crd.
     """
-
     crds1 = np.array(in_crds1)
     crds2 = np.array(in_crds2)
     assert crds1.shape[1] == 3
     assert crds1.shape == crds2.shape
 
+    # Compute centroids
+    centroid_P = np.mean(crds1, axis=0)
+    centroid_Q = np.mean(crds2, axis=0)
+
+    # Optimal translation
+    t = centroid_Q - centroid_P
+
+    # Center the points
+    if center:
+        crds1 = crds1 - centroid_P
+        crds2 = crds2 - centroid_Q
+
     n_vec = np.shape(crds1)[0]
+    # compute the covariance matrix
     correlation_matrix = np.dot(np.transpose(crds1), crds2)
+    # SVD decomposition
     v, s, w = np.linalg.svd(correlation_matrix)
     is_reflection = (np.linalg.det(v) * np.linalg.det(w)) < 0.0
-
     if is_reflection:
         s[-1] = -s[-1]
+
     E0 = sum(sum(crds1 * crds1)) + sum(sum(crds2 * crds2))
     rmsd_sq = (E0 - 2.0 * sum(s)) / float(n_vec)
     rmsd_sq = max([rmsd_sq, 0.0])
@@ -238,9 +252,58 @@ def numpy_svd_rmsd_rot(in_crds1, in_crds2):
 
     if is_reflection:
         v[-1, :] = -v[-1, :]
+
+    # optimal rotation
     rot33 = np.dot(v, w).transpose()
-    # print(is_reflection)
-    return rmsd, rot33, is_reflection
+
+    return rot33, t, rmsd, is_reflection
+
+
+# def kabsch_numpy(P, Q, center=False):
+#    """
+#    Computes the optimal rotation and translation to align two sets of points (P -> Q),
+#    and their RMSD.
+#
+#    :param P: A Nx3 matrix of points
+#    :param Q: A Nx3 matrix of points
+#    :param center: Whether to center the points
+#    :return: A tuple containing the optimal rotation matrix, the optimal
+#             translation vector, and the RMSD.
+#    """
+#    P = np.array(P)
+#    Q = np.array(Q)
+#    assert P.shape == Q.shape, "Matrix dimensions must match"
+#
+#    # Compute centroids
+#    centroid_P = np.mean(P, axis=0)
+#    centroid_Q = np.mean(Q, axis=0)
+#
+#    # Optimal translation
+#    t = centroid_Q - centroid_P
+#
+#    # Center the points
+#    if center:
+#        P = P - centroid_P
+#        Q = Q - centroid_Q
+#
+#    # Compute the covariance matrix
+#    H = np.dot(P.T, Q)
+#
+#    # SVD
+#    U, S, Vt = np.linalg.svd(H)
+#
+#    # Validate right-handed coordinate system
+#    is_reflection = np.linalg.det(np.dot(Vt.T, U.T)) < 0.0
+#    if is_reflection:
+#        Vt[-1, :] *= -1.0
+#
+#    # Optimal rotation
+#    R = np.dot(Vt.T, U.T)
+#
+#    # RMSD
+#    rmsd = np.sqrt(np.sum(np.square(np.dot(P, R.T) - Q)) / P.shape[0])
+#
+#    return R, t, rmsd, is_reflection
 
 
 def normalizeZ(Z):
@@ -349,12 +412,44 @@ def gene_gene_distance_matrix(F):
 
 
 def RMSD_distance_matrix(
-    Confs, GeneLists, ngene=100, compare_method="pair", norm_method=None
+    adatas, order=None, ngene=100, compare_method="pair", norm_method=None
 ):
-    keys = list(Confs.keys())
-    if not list(GeneLists.keys()) == keys:
-        print("GeneLists and Confs should have the same keys")
-        return
+    """
+    Calculate the RMSD distance matrix between configurations of different cell types
+    Parameters
+    ----------
+    Confs : dict
+        The dictionary of the configurations of different cell types
+    GeneLists : dict
+        The dictionary of the gene lists of different cell types
+    order : list, optional
+        The order of the cell types, by default None
+    ngene : int, optional
+        The number of genes to be compared, by default 100
+    compare_method : str, optional
+        The method to compare the gene lists, by default "pair"
+    norm_method : str, optional
+        The method to normalize the configurations, by default None
+    Returns
+    -------
+    np.ndarray
+        The RMSD distance matrix
+    """
+    import numpy as np
+
+    if order == None:
+        keys = list(adatas.keys())
+    else:
+        keys = order
+
+    GeneLists = {}
+    for ct, adata in adatas.items():
+        if "F" not in adata.uns.keys():
+            print(f"Please run Cytocraft for {ct} first")
+            return
+        GeneLists[ct] = adata.uns["F"].index
+
+    # calculate the distance matrix
     N = len(keys)
     DM = np.zeros((N, N))
     if compare_method == "complete":
@@ -379,14 +474,14 @@ def RMSD_distance_matrix(
                     )
             boolean_arrays_n = np.in1d(GeneLists[key_n], intersected_values)
             boolean_arrays_m = np.in1d(GeneLists[key_m], intersected_values)
-            Conf_n = Confs[key_n][boolean_arrays_n]
-            Conf_m = Confs[key_m][boolean_arrays_m]
+            Conf_n = adatas[key_n].uns["F"][boolean_arrays_n]
+            Conf_m = adatas[key_m].uns["F"][boolean_arrays_m]
             if norm_method:
                 Conf_n = normalizeF(Conf_n, method=norm_method)
                 Conf_m = normalizeF(Conf_m, method=norm_method)
-            d1, _, _ = numpy_svd_rmsd_rot(Conf_n, Conf_m)
-            d2, _, _ = numpy_svd_rmsd_rot(mirror(Conf_n), Conf_m)
-            DM[n, m] = DM[m, n] = min(d1, d2)
+            rmsd1 = kabsch_numpy(Conf_n, Conf_m)[2]
+            rmsd2 = kabsch_numpy(mirror(Conf_n), Conf_m)[2]
+            DM[n, m] = DM[m, n] = min(rmsd1, rmsd2)
     return DM
 
 
@@ -841,7 +936,7 @@ def craft(
     species,
     nderive=10,
     thresh=0.9,
-    thresh_rmsd=0.25,
+    thresh_rmsd=0.01,
     seed=999,
     samplename=None,
     outpath=False,
@@ -886,10 +981,10 @@ def craft(
         + "Gene Number: "
         + str(len(GeneUIDs))
         + "\n"
-        + "Threshold for gene filter is: "
+        + "Cutoff for gene filter is: "
         + str(thresh)
         + "\n"
-        + "Number of genes used for Rotation Derivation is: "
+        + "Anchor Gene Number is: "
         + str(nderive)
         + "\n"
         + "Task ID: "
@@ -935,9 +1030,9 @@ def craft(
                 f"{type(e).__name__} at line {e.__traceback__.tb_lineno} of {__file__}: {e}"
             )
             return "numpy.linalg.LinAlgError"
-        rmsd, _, _ = numpy_svd_rmsd_rot(
+        rmsd = kabsch_numpy(
             normalizeF(F, method="mean"), normalizeF(newF, method="mean")
-        )
+        )[2]
         print(
             "RMSD between New Configuration and Old Configuration for loop "
             + str(loop + 1)
@@ -968,7 +1063,7 @@ def craft(
         ## step3: check if conformation converges
         if rmsd < thresh_rmsd:
             break
-    print("Number of total Transcription centers is: " + str(F.shape[0]))
+    print("Number of total transcription centers is: " + str(F.shape[0]))
 
     adata.obsm["Rotation"] = RM
     adata.uns["F"] = pd.DataFrame(F, index=GeneUIDs)
@@ -992,7 +1087,7 @@ def parse_args():
         "-o",
         "--out_path",
         type=str,
-        help="Output dir to save results",
+        help="Directory to save results",
         required=True,
     )
     parser.add_argument(
@@ -1006,29 +1101,29 @@ def parse_args():
         "-p",
         "--percent",
         type=float,
-        help="Percent of gene for rotation derivation, default: 0.001",
+        help="Percent of anchor gene, default: 0.001",
         default=None,
     )
     parser.add_argument(
         "-n",
         "--number",
         type=int,
-        help="Number of gene for rotation derivation, recommend: 10",
+        help="Number of anchor gene, recommend: 10",
         default=10,
     )
     parser.add_argument(
         "-t",
         "--gene_filter_thresh",
         type=float,
-        help="The maximum proportion of np.nans allowed in a column(gene) in W, default: 0.90",
+        help="The maximum allowable proportion of np.nan values in a column (representing a gene) of the observed transcription centers (Z), default: 0.90",
         default=0.90,
     )
     parser.add_argument(
         "-r",
         "--rmsd_thresh",
         type=float,
-        help="The maximum value of cvRMSD allowed in conformation convergence, default: 0.25",
-        default=0.25,
+        help="RMSD threshold. If the computed RMSD value is less than or equal to this threshold, it means the process has reached an acceptable level of similarity or convergence, and the loop is exited. default: 0.01",
+        default=0.01,
     )
     parser.add_argument(
         "--sep",

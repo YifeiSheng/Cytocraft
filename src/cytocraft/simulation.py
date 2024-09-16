@@ -28,7 +28,7 @@ def DeriveRotation(W, X, Mask):
         idx = int(find_subarray(Wi_filter, Wi[i * 2]) / 2)
         Xi = X[Mask[i, :], :]
         model = factor(Wi_filter)
-        _, R, _ = numpy_svd_rmsd_rot(np.dot(model.Rs[idx], model.Ss[0]).T, Xi)
+        R = kabsch_numpy(np.dot(model.Rs[idx], model.Ss[0]).T, Xi)[0]
         Rotation[i] = R
     return Rotation
 
@@ -488,14 +488,14 @@ def main():
             # save_data(RM, outpath + "/HMEC_RM_" + "loop_" + str(loop) + ".pkl")
 
             # evaluate
-            rmsd1, _, _ = numpy_svd_rmsd_rot(
-                normalizeX(simX, method="mean"), normalizeX(X, method="mean")
-            )
+            rmsd1 = kabsch_numpy(
+                normalizeF(simX, method="mean"), normalizeF(X, method="mean")
+            )[2]
             X_mirror = np.copy(X)
             X_mirror[:, 2] = -X_mirror[:, 2]
-            rmsd2, _, _ = numpy_svd_rmsd_rot(
-                normalizeX(simX, method="mean"), normalizeX(X_mirror, method="mean")
-            )
+            rmsd2 = kabsch_numpy(
+                normalizeF(simX, method="mean"), normalizeF(X_mirror, method="mean")
+            )[2]
             minrmsd = min(rmsd1, rmsd2)
             print(
                 "Distance between ground truth and reconstructed structure for loop "

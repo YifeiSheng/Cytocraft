@@ -10,14 +10,14 @@
   packages = ["src/cytocraft"]
 [project]
   name = "cytocraft"
-  version = "0.0.10"
+  version = "0.1.3"
   dependencies = ["scanpy","shapely"]
   authors = [
     { name="Yifei Sheng", email="yfsheng6@gmail.com" },
     { name="Shiying Li", email="shiyingli7-c@my.cityu.edu.hk"},
     { name="Shuai Cheng Li", email="sc.li@cityu.edu.hk"},
   ]
-  description = "The Cytocraft package provides prediction of chromosome conformation based on spatial transcriptomic."
+  description = "The Cytocraft package provides prediction of chromosome configuration based on subcellular resolution spatial transcriptomics."
   readme = {file="README.md", content-type= "text/markdown"}
   requires-python = ">=3.8"
   classifiers = [

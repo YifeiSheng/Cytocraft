@@ -88,7 +88,7 @@ def plot_RMSD_heatmap(
         legend = plt.legend(
             handles,
             sorted(lut),
-            title="Clusters",
+            title="Groups",
             bbox_to_anchor=lgbox,
             bbox_transform=plt.gcf().transFigure,
             loc="upper right",
