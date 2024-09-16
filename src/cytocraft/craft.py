@@ -1080,7 +1080,7 @@ def parse_args():
         "-i",
         "--gem_path",
         type=str,
-        help="Input path to gene expression matrix file",
+        help="Path of input gene expression matrix file",
         required=True,
     )
     parser.add_argument(
@@ -1093,7 +1093,7 @@ def parse_args():
     parser.add_argument(
         "--species",
         type=str,
-        help="Species of the input data, e.g. Human, Mouse",
+        help="Species of the input data",
         choices=["Human", "Mouse", "Mice", "Axolotls", "Axolotl", "Monkey"],
         required=True,
     )
@@ -1101,28 +1101,28 @@ def parse_args():
         "-p",
         "--percent",
         type=float,
-        help="Percent of anchor gene, default: 0.001",
+        help="Percent of anchor gene for rotation derivation",
         default=None,
     )
     parser.add_argument(
         "-n",
         "--number",
         type=int,
-        help="Number of anchor gene, recommend: 10",
+        help="Number of anchor gene for rotation derivation",
         default=10,
     )
     parser.add_argument(
         "-t",
         "--gene_filter_thresh",
         type=float,
-        help="The maximum allowable proportion of np.nan values in a column (representing a gene) of the observed transcription centers (Z), default: 0.90",
+        help="The maximum allowable proportion of np.nan values in a column (representing a gene) of the observed transcription centers (Z).",
         default=0.90,
     )
     parser.add_argument(
         "-r",
         "--rmsd_thresh",
         type=float,
-        help="RMSD threshold. If the computed RMSD value is less than or equal to this threshold, it means the process has reached an acceptable level of similarity or convergence, and the loop is exited. default: 0.01",
+        help="RMSD threshold. If the computed RMSD value is less than or equal to this threshold, it means the process has reached an acceptable level of similarity or convergence, and the loop is exited.",
         default=0.01,
     )
     parser.add_argument(
@@ -1135,25 +1135,28 @@ def parse_args():
         "-c",
         "--celltype",
         type=str,
-        help="Path of obs file containing cell types",
+        help="Path of the annotation file containing cell id and cell type, multi-celltype mode only",
     )
     parser.add_argument(
         "--ctkey",
         type=str,
-        help="Key of celltype column in the annotation file",
+        help="Key of celltype column in the annotation file, multi-celltype mode only",
     )
     parser.add_argument(
         "--cikey",
         type=str,
-        help="Key of cell id column in the annotation file",
+        help="Key of cell id column in the annotation file, multi-celltype mode only",
     )
     parser.add_argument(
-        "--csep", type=str, help="Annotation file separator", default="\t"
+        "--csep",
+        type=str,
+        help="Separator of the annotation file, multi-celltype mode only",
+        default="\t",
     )
     parser.add_argument(
         "--seed",
         type=int,
-        help="Random seed",
+        help="Random seed, default: random int between 0 to 1000",
     )
 
     args = parser.parse_args()

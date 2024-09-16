@@ -6,7 +6,7 @@
 
 ## Overview
 
-The Cytocraft package generates a 3D reconstruction of transcription centers with subcellular resolution spatial transcriptomics.
+The Cytocraft package generates a 3D reconstruction of transcription centers based on subcellular resolution spatial transcriptomics.
 
 ## Installaion
 
@@ -18,62 +18,68 @@ pip install cytocraft
 
 ### import
 ```
-from cytocraft.craft import *
+import cytocraft.craft as cc
 ```
 ### read input 
 
 ```
 gem_path = './data/mice/example_scgem.csv'
-gem = read_gem_as_csv(gem_path, sep=',')
-adata = read_gem_as_adata(gem_path, sep=',', SN='example')
-GeneUIDs = get_GeneUID(gem)
+gem = cc.read_gem_as_csv(gem_path, sep=',')
+adata = cc.read_gem_as_adata(gem_path, sep=',')
 ```
 
-### run cytocraft
+### run cytocraft (quick start, see tutorial [here](https://github.com/YifeiSheng/Cytocraft/blob/main/tutorial.ipynb) for more details)
 
 ```
-adata = craft(
-	gem=gem,
-        adata=adata,
-        species='Mice',
-        seed=999,
-        )
+adata = cc.craft(
+	    gem=gem,
+      adata=adata,
+      species='Mice',
+      seed=999,
+      samplename='example'
+      )
 ```
 
 ## CLI Mode Usage
 ```
-python craft.py [-h] [-p PERCENT] [-c CELLTYPE] [--ctkey CTKEY] [--cikey CIKEY] [--seed SEED] gem_path out_path {Human,Mouse,Axolotls,Monkey}
+python craft.py [-h] [-p/-n PERCENT/NUMBER] [-t GENE_FILTER_THRESH] [-r RMSD_THRESH] [--sep \t] [-c CELLTYPE] [--ctkey CTKEY] [--cikey CIKEY] [--csep \t] [--seed SEED] -i gem_path -o out_path --species {Human,Mouse,Axolotls,Monkey}
 ```
 ### Positional arguments:
 
-  gem_path              `Input: path to gene expression matrix file`
+  -i,--gem_path  `Input: Path of input gene expression matrix file`
 
-  out_path              `Output: dir path to save results`
+  -o,--out_path  `Output: Directory to save results`
 
-  {Human,Mouse,Axolotls,Monkey} `Species of the input data`
+  --species  `Species of the input data, e.g. {Human,Mouse,Axolotls,Monkey} `
 
 ### Optional arguments:
 
-  -h, --help     `show this help message and exit`
+  -h, --help  `Show this help message and exit`
 
-  -p, --percent  `percent of gene for rotation derivation, default: 0.001`
+  -p/-n, --percent/--number  `Percent/Number of anchor gene for rotation derivation, default: 0.001/10`
 
-  -t, --threshold  `The maximum proportion of np.nans allowed in a column(gene) in W, default: 0.90`
+  -t, --gene_filter_thresh  `The maximum allowable proportion of np.nan values in a column (representing a gene) of the observed transcription centers (Z), default: 0.90`
 
-  -c, --celltype `Path of file containing cell types, multi-celltype mode only`
+  -r, --rmsd_thresh  `RMSD threshold. If the computed RMSD value is less than or equal to this threshold, it means the process has reached an acceptable level of similarity or convergence, and the loop is exited. default: 0.01`
 
-  --ctkey `Key of celltype column in the cell type file, multi-celltype mode only`
+  --sep  `Separator of the input gene expression matrix file`
 
-  --cikey `Key of cell id column in the cell type file, multi-celltype mode only`
+  -c, --celltype  `Path of the annotation file containing cell types, multi-celltype mode only`
+
+  --ctkey  `Key of celltype column in the cell type file, multi-celltype mode only`
+
+  --cikey  `Key of cell id column in the cell type file, multi-celltype mode only`
+
+  --csep  `Separator of the annotation file, multi-celltype mode only, default: \t`
 
   --seed  `Random seed, default: random int between 0 to 1000`
 
 ### One-celltype example:
 ```
-python craft.py ./data/SS200000108BR_A3A4_scgem.Spinal_cord_neuron.csv ./results/ Mouse
+python craft.py -i ./data/SS200000108BR_A3A4_scgem.Spinal_cord_neuron.csv -o ./results/ --species Mouse
 ```
 
 ### Multi-celltype example:
 ```
-python craft.py ./data/SSSS200000108BR_A3A4_scgem.csv ./results/ Mouse --celltype ./data/cell_feature.csv --ctkey cell_type --cikey cell_id
+python craft.py -i ./data/SSSS200000108BR_A3A4_scgem.csv -o ./results/ --species Mouse --celltype ./data/cell_feature.csv --ctkey cell_type --cikey cell_id
 ```
