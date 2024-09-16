@@ -28,16 +28,16 @@ gem = cc.read_gem_as_csv(gem_path, sep=',')
 adata = cc.read_gem_as_adata(gem_path, sep=',')
 ```
 
-### run cytocraft (quick start, see tutorial [here](https://github.com/YifeiSheng/Cytocraft/blob/main/tutorial.ipynb) for more details)
+### run cytocraft (quick start, see [tutorial] (https://github.com/YifeiSheng/Cytocraft/blob/main/tutorial.ipynb) for more details)
 
 ```
 adata = cc.craft(
-	    gem=gem,
-      adata=adata,
-      species='Mice',
-      seed=999,
-      samplename='example'
-      )
+  gem=gem,
+  adata=adata,
+  species='Mice',
+  seed=999,
+  samplename='example'
+  )
 ```
 
 ## CLI Mode Usage
