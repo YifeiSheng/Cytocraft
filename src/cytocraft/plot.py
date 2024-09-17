@@ -211,3 +211,469 @@ def umap_leiden(
     if plot_umap:
         sc.pl.umap(adata, color=["leiden"], title=title)
     return adata.obs["leiden"]
+
+
+def connect_edge_knn(G, k):
+    """
+    使用KNN算法为图G添加边,基于节点三维坐标
+
+    参数:
+    G (NetworkX Graph): 输入图,节点数据中必须包含'coords'键,存储三维坐标
+    k (int): KNN算法中的邻居数量
+
+    返回:
+    G (NetworkX Graph): 添加边后的图
+    """
+    import numpy as np
+    from sklearn.neighbors import NearestNeighbors
+
+    # 获取节点坐标
+    node_coords = np.array([G.nodes[u]["pos"] for u in G.nodes()])
+
+    # 创建KNN模型
+    knn = NearestNeighbors(n_neighbors=k + 1, algorithm="auto")
+    knn.fit(node_coords)
+    # 获取邻接矩阵
+    distances, indices = knn.kneighbors(node_coords)
+
+    nodes = list(G.nodes())
+    # 构建邻接矩阵
+    for i in range(len(node_coords)):
+        for j in range(1, k + 1):
+            start = indices[i][0]
+            end = indices[i][j]
+            d = distances[i][j]
+            G.add_edge(nodes[start], nodes[end], weight=1 / d, capacity=1 / d)
+
+    # components,components_draw = get_components(G,save_path)
+    # run_Go(components_draw,save_path,species,label,df,draw)
+
+    return G
+
+
+def draw_5NN(G, title, save_path):
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import matplotlib.patheffects as pe
+    import networkx as nx
+    import itertools
+    from itertools import chain
+    import os
+
+    if not os.path.exists(save_path):
+        # 创建文件夹
+        os.makedirs(save_path)
+
+    components, components_draw = get_components(G, save_path)
+
+    colors = plt.get_cmap("rainbow")(np.linspace(0, 1, len(components_draw)))[:, :3]
+    # color_map = {node: colors[i] for i, comp in enumerate(components_draw) for node in comp}
+    color_map = {
+        node: colors[i] if comp in components_draw else "gray"
+        for i, comp in enumerate(components)
+        for node in comp
+    }
+
+    # alpha_map = {node: 1.0 if comp in components_draw else 0.3 for i, comp in enumerate(components) for node in comp}
+
+    color_legend = {
+        "component " + str(i): colors[i]
+        for i, comp in enumerate(components_draw)
+        if comp in components_draw
+    }
+    # with open(out_f + str(k) + "_knn.pkl", "wb") as f:
+    #     pickle.dump(G, f)
+
+    # 3D可视化
+
+    # from IPython.display import display
+
+    node_size = nx.pagerank(G, alpha=0.85, weight=None)
+    sorted_dict = sorted(node_size.items(), key=lambda x: x[1], reverse=True)
+    labels = {}
+    for i in sorted_dict[:10]:
+        labels[i[0]] = i[0]
+
+    node_positions = nx.get_node_attributes(G, "pos")
+
+    fig = plt.figure(figsize=(15, 15))
+    ax = fig.add_subplot(111, projection="3d")
+    # 绘制节点
+
+    nodes_x = []
+    nodes_y = []
+    nodes_z = []
+    node_s = []
+    alphas = []
+    node_color = []
+    nodes = []
+
+    for node, pos in node_positions.items():
+        x, y, z = pos
+        nodes_x.append(x)
+        nodes_y.append(y)
+        nodes_z.append(z)
+        # x, y, z = pos
+        node_s.append(np.sqrt(node_size[node]).tolist() * 900)
+        nodes.append(node)
+
+        # ax.scatter(x, y, z, c='b', s=node_s)
+        # ax.scatter(x, y, z, c=[color_map[node]],zorder=1)
+        node_color.append(color_map[node])
+        # alphas.append(alpha_map[node])
+
+    ax.set_xlim(min(nodes_x), max(nodes_x))
+    ax.set_ylim(min(nodes_y), max(nodes_y))
+    ax.set_zlim(min(nodes_z), max(nodes_z))
+
+    for edge in G.edges():
+        start = node_positions[edge[0]]
+        end = node_positions[edge[1]]
+        xs = [start[0], end[0]]
+        ys = [start[1], end[1]]
+        zs = [start[2], end[2]]
+        # ax.quiver(xs[0], ys[0], zs[0], xs[1] - xs[0], ys[1] - ys[0], zs[1] - zs[0],color=color_map[start.name],linewidth=2, pivot='tail', length=1,zorder=0)
+
+        if color_map[start.name] == "gray" or color_map[end.name] == "gray":
+            alpha = 0.3
+        else:
+            alpha = 1
+
+        ax.plot(xs, ys, zs, c=color_map[start.name], linewidth=1.0, alpha=alpha)
+
+    # 绘制边
+    length = max(nodes_z) - min(nodes_z)
+    sc = ax.scatter(
+        nodes_x, nodes_y, nodes_z, alpha=0.3, c=node_color, s=[x * 2 for x in node_s]
+    )
+
+    for i, label in enumerate(labels):
+        ax.text(
+            node_positions[label][0],
+            node_positions[label][1],
+            node_positions[label][2] + 0.01 * length,
+            label,
+            fontsize=8,
+            fontweight="bold",
+            horizontalalignment="center",
+            path_effects=[pe.withStroke(linewidth=1, foreground="white")],
+        )
+
+    legend_elements = [
+        plt.Line2D([0], [0], color=color, lw=4, label=component)
+        for component, color in color_legend.items()
+    ]
+    if len(legend_elements) > 50:
+        plt.legend(
+            handles=legend_elements,
+            loc="center right",
+            ncol=2,
+            bbox_to_anchor=(1.4, 0.5),
+        )
+        plt.subplots_adjust(right=0.75)
+        plt.tight_layout()
+
+    else:
+        plt.legend(
+            handles=legend_elements, loc="center right", bbox_to_anchor=(1.15, 0.5)
+        )
+        plt.subplots_adjust(right=0.85)
+        # plt.tight_layout()
+
+    # 设置坐标轴标签
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.set_zlabel("Z")
+
+    plt.title(title, fontsize=55)
+    plt.show()
+    plt.savefig(save_path + "3D.png", dpi=300, transparent=True)
+    plt.clf()
+
+    # 创建新的图 G'
+    G_new = nx.DiGraph()
+
+    # 复制节点
+    for node in G.nodes:
+        G_new.add_node(node)
+
+    # 复制边
+    for u, v in G.edges:
+        G_new.add_edge(u, v)
+
+    inter = True
+
+    keys1 = set({n: n for n in G}.keys())
+    keys2 = set(labels.keys())
+    mark_elements = set(chain(*components_draw))
+
+    unimportant = {
+        key: ({n: n for n in G}[key]) for key in (keys1 - keys2 - mark_elements)
+    }
+
+    marked = {key: ({n: n for n in G}[key]) for key in (mark_elements - keys2)}
+
+    # 创建新的图 G'
+    G_new = nx.DiGraph()
+
+    node_s_marked = []
+    count = 0
+    # 复制节点
+    for node in G.nodes:
+        if node in mark_elements:
+
+            if len(components_draw) > 20:
+                node_s_marked.append(node_s[count] * 2)
+            else:
+                node_s_marked.append(node_s[count] * 4)
+
+            G_new.add_node(node)
+        count = count + 1
+
+    components_df = sets_to_dataframe(components_draw)
+    # 复制边
+    for u, v in G.edges:
+        if (
+            u in mark_elements
+            and v in mark_elements
+            and components_df.loc[u, "Index"] == components_df.loc[v, "Index"]
+        ):
+            G_new.add_edge(u, v)
+
+    count = 0
+
+    while inter and count < 50:
+        count = count + 1
+        # print(inter)
+        pos = generate_pos(G_new)
+
+        edges = list(G_new.edges)
+
+        for e1, e2 in itertools.combinations(edges, 2):
+            x1, y1 = pos[e1[0]]
+            x2, y2 = pos[e1[1]]
+            x3, y3 = pos[e2[0]]
+            x4, y4 = pos[e2[1]]
+
+            line1 = (x1, y1, x2, y2)
+            line2 = (x3, y3, x4, y4)
+
+            inter = line_intersection(line1, line2)
+
+            if inter:
+                inter = True
+
+                break
+            else:
+                inter = False
+
+    edge_colors = []
+    for u, v in G_new.edges():
+        edge_colors.append(color_map[u])
+
+    plt.figure(figsize=(10, 10))
+    # plt.tight_layout()
+
+    if len(legend_elements) > 50:
+        plt.legend(
+            handles=legend_elements,
+            loc="center right",
+            fontsize=9,
+            ncol=2,
+            bbox_to_anchor=(1.3, 0.5),
+        )
+        plt.subplots_adjust(right=0.8)
+        # plt.tight_layout()
+    else:
+        plt.legend(
+            handles=legend_elements,
+            loc="center right",
+            fontsize=9,
+            bbox_to_anchor=(1.15, 0.5),
+        )
+        plt.subplots_adjust(right=0.85)
+        # plt.tight_layout()
+
+    # 设置边的颜色
+    # edge_color = (0.6, 0.6, 0.6, 0.7)  # 略浅于灰色，略深于 lightgray
+    nx.draw(
+        G_new,
+        pos,
+        with_labels=False,
+        node_color=[color_map[node] for node in G_new.nodes()],
+        edge_color=edge_colors,
+        node_size=node_s_marked,
+        arrowsize=5,
+    )
+    # plt.subplots_adjust(left=0.05, right=0.95, bottom=0.05, top=0.95)
+
+    pos_higher = {}
+    y_off = 0.2  # offset on the y axis
+    for k, v in pos.items():
+        pos_higher[k] = (v[0], v[1] + y_off)
+
+    pos_bigger_higher = {}
+    y_off = 0.5  # offset on the y axis
+    for k, v in pos.items():
+        pos_bigger_higher[k] = (v[0], v[1] + y_off)
+
+    pos_mark_higher = {}
+    y_off = 0.3  # offset on the y axis
+    for k, v in pos.items():
+        pos_mark_higher[k] = (v[0], v[1] + y_off)
+
+    labels = {}
+    count = 0
+    for i in sorted_dict:
+        if i[0] in G_new.nodes():
+            labels[i[0]] = i[0]
+            count = count + 1
+        if count == 10:
+            break
+
+    marked = {
+        key: ({n: n for n in G}[key]) for key in (mark_elements - set(labels.keys()))
+    }
+
+    # labels = {key: value for key, value in labels.items() if key in mark_elements}
+    # nx.draw_networkx_labels(G_new, pos_higher, labels=unimportant, font_color='black', font_size=5)
+    if len(pos_bigger_higher) < 400:
+        nx.draw_networkx_labels(
+            G_new,
+            pos_bigger_higher,
+            labels=labels,
+            font_color="black",
+            font_size=5,
+            font_weight="bold",
+        )
+        nx.draw_networkx_labels(
+            G_new, pos_mark_higher, labels=marked, font_color="black", font_size=3
+        )
+    else:
+        nx.draw_networkx_labels(
+            G_new,
+            pos_bigger_higher,
+            labels=labels,
+            font_color="black",
+            font_size=5,
+            font_weight="bold",
+        )
+        nx.draw_networkx_labels(
+            G_new, pos_mark_higher, labels=marked, font_color="black", font_size=3
+        )
+
+    # plt.show()
+    plt.title(title, fontsize=35)
+
+    # plt.subplots_adjust(left=0.05, right=0.95, bottom=0.05, top=0.95)
+    # plt.tight_layout()
+    plt.show()
+    plt.savefig(save_path + "2D.png", dpi=200, transparent=True)
+    plt.clf()
+    # cbar = plt.colorbar(sc,shrink=0.7)
+
+
+def get_components(G, save_path, mini=5):
+    components = list(nx.weakly_connected_components(G))
+
+    if len(components) < 5:
+        # communities_generator = nx.community.girvan_newman(G)
+        next_level_communities = nx.community.louvain_communities(G)
+        # top_level_communities = next(communities_generator)
+        # next_level_communities = next(communities_generator)
+        # components = sorted(map(sorted, next_level_communities))
+
+        components = [
+            set(sub_list) for sub_list in sorted(map(sorted, next_level_communities))
+        ]
+
+    components = sorted(components, key=lambda x: len(x), reverse=True)
+
+    components_draw = [comp for comp in components if len(comp) >= mini]
+
+    components_length = sets_to_dataframe(components)
+
+    components_length.to_csv(save_path + "/components_length.csv")
+
+    if len(components_draw) == 0:
+        components_draw = [comp for comp in components if len(comp) > 2]
+
+    if len(components_draw) > 30:
+        components_draw = components[:30]
+
+    return components, components_draw
+
+
+def sets_to_dataframe(sets_list):
+    import pandas as pd
+
+    """
+    Convert a list of sets to a DataFrame with values as index and set lengths as column.
+    
+    Parameters:
+    sets_list (list of sets): The input list of sets.
+    
+    Returns:
+    pd.DataFrame: The resulting DataFrame with values as index and set lengths as the only column.
+    """
+    # Create a dictionary to store the data
+    data = {"Length": []}
+
+    # Iterate over each set in the list
+    index = 1
+    for s in sets_list:
+        length = len(s)
+        # print(index)
+        for value in s:
+            data["Length"].append((value, length, index))
+            # ,index
+        index = index + 1
+
+    # Convert the dictionary to a DataFrame
+    df = pd.DataFrame(data["Length"], columns=["Value", "Length", "Index"])
+
+    # Set the index to 'Value'
+    df.set_index("Value", inplace=True)
+
+    return df
+
+
+def generate_pos(G_new):
+    import igraph as ig
+
+    G_2 = ig.Graph.from_networkx(G_new)
+    labels = list(G_2.vs["_nx_name"])
+    N = len(labels)
+    E = [e.tuple for e in G_2.es]  # list of edges
+    layt = G_2.layout("fr")
+
+    Xn = [layt[k][0] for k in range(N)]
+    Yn = [layt[k][1] for k in range(N)]
+
+    pos = {}
+    for n in range(N):
+        node = labels[n]
+        pos[node] = [Xn[n], Yn[n]]
+
+    return pos
+
+
+def line_intersection(line1, line2):
+
+    x1, y1, x2, y2 = line1
+    x3, y3, x4, y4 = line2
+
+    if x1 == x3 or x1 == x4 or x2 == x3 or x2 == x4:
+        return False
+
+    denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1)
+    if denom == 0:
+        return False
+
+    ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / denom
+    ub = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / denom
+
+    if 0 < ua < 1 and 0 < ub < 1:
+        return True
+
+    return False
