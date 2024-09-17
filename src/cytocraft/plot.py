@@ -574,6 +574,8 @@ def draw_5NN(G, title, save_path):
 
 
 def get_components(G, save_path, mini=5):
+    import networkx as nx
+
     components = list(nx.weakly_connected_components(G))
 
     if len(components) < 5:
