@@ -5,6 +5,7 @@
   exclude = [
     "/.git",
     "/demo",
+    "/src/cytocraft/__pycache__",
   ]
 [tool.hatch.build.targets.wheel]
   packages = ["src/cytocraft"]

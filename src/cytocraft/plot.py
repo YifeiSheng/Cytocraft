@@ -215,29 +215,27 @@ def umap_leiden(
 
 def connect_edge_knn(G, k):
     """
-    使用KNN算法为图G添加边,基于节点三维坐标
-
-    参数:
-    G (NetworkX Graph): 输入图,节点数据中必须包含'coords'键,存储三维坐标
-    k (int): KNN算法中的邻居数量
-
-    返回:
-    G (NetworkX Graph): 添加边后的图
+    Connect nodes in the graph G with k-nearest neighbors.
+    Parameters:
+        G (nx.Graph): The input graph.
+        k (int): The number of nearest neighbors to connect.
+    Returns:
+        nx.Graph: The graph with edges added
     """
     import numpy as np
     from sklearn.neighbors import NearestNeighbors
 
-    # 获取节点坐标
+    # Get the node coordinates
     node_coords = np.array([G.nodes[u]["pos"] for u in G.nodes()])
 
-    # 创建KNN模型
+    # Fit the k-nearest neighbors model
     knn = NearestNeighbors(n_neighbors=k + 1, algorithm="auto")
     knn.fit(node_coords)
-    # 获取邻接矩阵
+    # Find the k-nearest neighbors
     distances, indices = knn.kneighbors(node_coords)
 
     nodes = list(G.nodes())
-    # 构建邻接矩阵
+    # Add edges to the graph
     for i in range(len(node_coords)):
         for j in range(1, k + 1):
             start = indices[i][0]
@@ -252,6 +250,15 @@ def connect_edge_knn(G, k):
 
 
 def draw_5NN(G, title, save_path):
+    """
+    Draw the 5-nearest neighbors graph.
+    Parameters:
+        G (nx.Graph): The input graph.
+        title (str): The title of the plot.
+        save_path (str): The path to save the plot.
+    Returns:
+        None
+    """
     import numpy as np
     import matplotlib.pyplot as plt
     import matplotlib.patheffects as pe
@@ -261,7 +268,6 @@ def draw_5NN(G, title, save_path):
     import os
 
     if not os.path.exists(save_path):
-        # 创建文件夹
         os.makedirs(save_path)
 
     components, components_draw = get_components(G, save_path)
@@ -284,8 +290,6 @@ def draw_5NN(G, title, save_path):
     # with open(out_f + str(k) + "_knn.pkl", "wb") as f:
     #     pickle.dump(G, f)
 
-    # 3D可视化
-
     # from IPython.display import display
 
     node_size = nx.pagerank(G, alpha=0.85, weight=None)
@@ -298,7 +302,6 @@ def draw_5NN(G, title, save_path):
 
     fig = plt.figure(figsize=(15, 15))
     ax = fig.add_subplot(111, projection="3d")
-    # 绘制节点
 
     nodes_x = []
     nodes_y = []
@@ -341,7 +344,6 @@ def draw_5NN(G, title, save_path):
 
         ax.plot(xs, ys, zs, c=color_map[start.name], linewidth=1.0, alpha=alpha)
 
-    # 绘制边
     length = max(nodes_z) - min(nodes_z)
     sc = ax.scatter(
         nodes_x, nodes_y, nodes_z, alpha=0.3, c=node_color, s=[x * 2 for x in node_s]
@@ -380,7 +382,6 @@ def draw_5NN(G, title, save_path):
         plt.subplots_adjust(right=0.85)
         # plt.tight_layout()
 
-    # 设置坐标轴标签
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
     ax.set_zlabel("Z")
@@ -390,14 +391,11 @@ def draw_5NN(G, title, save_path):
     plt.savefig(save_path + "3D.png", dpi=300, transparent=True)
     plt.clf()
 
-    # 创建新的图 G'
     G_new = nx.DiGraph()
 
-    # 复制节点
     for node in G.nodes:
         G_new.add_node(node)
 
-    # 复制边
     for u, v in G.edges:
         G_new.add_edge(u, v)
 
@@ -413,12 +411,10 @@ def draw_5NN(G, title, save_path):
 
     marked = {key: ({n: n for n in G}[key]) for key in (mark_elements - keys2)}
 
-    # 创建新的图 G'
     G_new = nx.DiGraph()
 
     node_s_marked = []
     count = 0
-    # 复制节点
     for node in G.nodes:
         if node in mark_elements:
 
@@ -431,7 +427,6 @@ def draw_5NN(G, title, save_path):
         count = count + 1
 
     components_df = sets_to_dataframe(components_draw)
-    # 复制边
     for u, v in G.edges:
         if (
             u in mark_elements
@@ -494,8 +489,6 @@ def draw_5NN(G, title, save_path):
         plt.subplots_adjust(right=0.85)
         # plt.tight_layout()
 
-    # 设置边的颜色
-    # edge_color = (0.6, 0.6, 0.6, 0.7)  # 略浅于灰色，略深于 lightgray
     nx.draw(
         G_new,
         pos,

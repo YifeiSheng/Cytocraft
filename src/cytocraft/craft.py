@@ -19,7 +19,9 @@ warnings.filterwarnings("ignore")
 
 """
 This module implements main functions of Cytocraft.
-Authors: Yifei Sheng, Shiying Li, Shuai Cheng Li
+
+Authors: Yifei Sheng, Shiying Li, and Shuai Cheng Li.
+Email: yfsheng6@gmail.com
 """
 
 
