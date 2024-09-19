@@ -703,8 +703,8 @@ def read_gem_as_csv(path, sep="\t"):
             "expr": float,
         },
     )
-    gem["x"] = gem["x"].astype(int)
-    gem["y"] = gem["y"].astype(int)
+    gem["x"] = pd.to_numeric(gem["x"], errors="coerce").fillna(0).astype(int)
+    gem["y"] = pd.to_numeric(gem["y"], errors="coerce").fillna(0).astype(int)
     # cell column
     if "cell" in gem.columns:
         gem.rename(columns={"cell": "CellID"}, inplace=True)
