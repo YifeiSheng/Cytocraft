@@ -111,7 +111,6 @@ python craft.py -i ./data/SSSS200000108BR_A3A4_scgem.csv -o ./results/ --species
 2. Open and run the [tutorial](https://github.com/YifeiSheng/Cytocraft/blob/main/tutorial.ipynb) notebook provided in the repository to process the demo data step-by-step.
 
 ### Expected Output
-### Expected Output
 
 - A h5ad format adata file containing the 3D reconstruction, rotation matrices of cells, and all other input information.
 - A log file containing the following information:
