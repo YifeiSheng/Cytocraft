@@ -1,4 +1,5 @@
 import sys, os, argparse, pickle, copy, random, string, csv, warnings
+from datetime import datetime
 import numpy as np
 import pandas as pd
 import scanpy as sc
@@ -406,9 +407,10 @@ def gene_gene_distance_matrix(F):
     GeneList = list(F.index)
     N = len(GeneList)
     DM = np.zeros((N, N))
-    for n, _ in enumerate(GeneList):
-        for m, _ in enumerate(GeneList[: n + 1]):
-            d = np.linalg.norm(F.iloc[n] - F.iloc[m])
+    F_values = F.values  # Convert DataFrame to numpy array for faster access
+    for n in range(N):
+        for m in range(n + 1):
+            d = np.linalg.norm(F_values[n] - F_values[m])
             DM[n, m] = DM[m, n] = d
     return DM
 
@@ -446,10 +448,12 @@ def RMSD_distance_matrix(
 
     GeneLists = {}
     for ct, adata in adatas.items():
-        if "F" not in adata.uns.keys():
+        if "F" in adata.uns.keys():
+            GeneLists[ct] = adata.uns["F"].index
+        elif "X" in adata.uns.keys():
+            GeneLists[ct] = adata.uns["X"].index
+        else:
             print(f"Please run Cytocraft for {ct} first")
-            return
-        GeneLists[ct] = adata.uns["F"].index
 
     # calculate the distance matrix
     N = len(keys)
@@ -476,8 +480,12 @@ def RMSD_distance_matrix(
                     )
             boolean_arrays_n = np.in1d(GeneLists[key_n], intersected_values)
             boolean_arrays_m = np.in1d(GeneLists[key_m], intersected_values)
-            Conf_n = adatas[key_n].uns["F"][boolean_arrays_n]
-            Conf_m = adatas[key_m].uns["F"][boolean_arrays_m]
+            if "F" in adata.uns.keys():
+                Conf_n = adatas[key_n].uns["F"][boolean_arrays_n]
+                Conf_m = adatas[key_m].uns["F"][boolean_arrays_m]
+            elif "X" in adata.uns.keys():
+                Conf_n = adatas[key_n].uns["X"][boolean_arrays_n]
+                Conf_m = adatas[key_m].uns["X"][boolean_arrays_m]
             if norm_method:
                 Conf_n = normalizeF(Conf_n, method=norm_method)
                 Conf_m = normalizeF(Conf_m, method=norm_method)
@@ -488,13 +496,45 @@ def RMSD_distance_matrix(
 
 
 def expression_similarity(adatas, ngene, method="pearson", compare_method="pair"):
+    """
+    Calculate the similarity of gene expression between different samples.
+
+    Parameters:
+    -----------
+    adatas : dict
+        A dictionary where keys are sample names and values are AnnData objects containing gene expression data.
+    ngene : int
+        The number of genes to consider for the similarity calculation.
+    method : str, optional
+        The method to use for calculating similarity. Currently, only "pearson" is supported. Default is "pearson".
+    compare_method : str, optional
+        The method to use for comparing gene lists. Options are "pair" for pairwise comparison and "complete" for complete intersection. Default is "pair".
+
+    Returns:
+    --------
+    similarity_matrix : np.ndarray
+        A matrix of similarity scores between the samples.
+
+    Notes:
+    ------
+    - If the number of common genes between any two samples is less than `ngene`, a warning will be printed.
+    - If the specified method is not supported, the function will print an error message and return None.
+    """
+    GeneLists = {}
+    for ct, adata in adatas.items():
+        if "F" in adata.uns.keys():
+            GeneLists[ct] = adata.uns["F"].index
+        elif "X" in adata.uns.keys():
+            GeneLists[ct] = adata.uns["X"].index
+        else:
+            print(f"Please run Cytocraft for {ct} first")
     if method == "pearson":
         similarity_matrix = np.zeros((len(adatas), len(adatas)))
         for i, sample1 in enumerate(adatas.keys()):
             for j, sample2 in enumerate(adatas.keys()):
                 if compare_method == "pair":
                     intersected_values = np.intersect1d(
-                        GeneLists[key_n], GeneLists[key_m]
+                        GeneLists[sample1], GeneLists[sample2]
                     )
                     # print("number of common gene: " + str(len(intersected_values)))
                     intersected_values = intersected_values[:ngene]
@@ -874,47 +914,41 @@ def run_craft(
     gem_path,
     species,
     seed,
-    out_path,
-    sep,
+    outpath,
+    sep="\t",
     threshold_for_gene_filter=0.9,
     threshold_for_rmsd=0.25,
-    Ngene_for_rotation_derivation=None,
+    n_anchor=None,
     percent_of_gene_for_rotation_derivation=None,
+    sn="sample",
 ):
     # set seed
     random.seed(seed)
     np.random.seed(seed)
-    #################### INIT ####################
-    models = []
-    SN = os.path.basename(os.path.splitext(gem_path)[0])
-    TID = generate_id()
-    outpath = out_path + "/" + SN + "_" + TID + "/"
 
     # make dir
     Path(outpath).mkdir(parents=True, exist_ok=True)
 
     # start logging
-    log_file = open(outpath + "/" + SN + "_" + TID + ".log", "w")
+    log_file = open(outpath + "/" + "craft.log", "w")
     sys.stdout = log_file
 
     # read input gem
     gem = read_gem_as_csv(gem_path, sep=sep)
-    adata = read_gem_as_adata(gem_path, sep=sep, SN=SN)
+    adata = read_gem_as_adata(gem_path, sep=sep, SN=sn)
     GeneUIDs = get_GeneUID(gem)
-    if Ngene_for_rotation_derivation is None:
-        Ngene_for_rotation_derivation = int(
-            float(percent_of_gene_for_rotation_derivation) * len(GeneUIDs)
-        )
+    if n_anchor is None:
+        n_anchor = int(float(percent_of_gene_for_rotation_derivation) * len(GeneUIDs))
     try:
         adata = craft(
             gem=gem,
             adata=adata,
             species=species,
-            nderive=Ngene_for_rotation_derivation,
+            nderive=n_anchor,
             thresh=threshold_for_gene_filter,
             thresh_rmsd=threshold_for_rmsd,
             seed=seed,
-            samplename=SN,
+            samplename=sn,
             outpath=outpath,
         )
     except Exception as e:
@@ -922,11 +956,11 @@ def run_craft(
             f"{type(e).__name__} at line {e.__traceback__.tb_lineno} of {__file__}: {e}",
             file=sys.stderr,
         )
-        print("conformation reconstruction failed.", file=sys.stderr)
+        print("configuration reconstruction failed.", file=sys.stderr)
         sys.stdout = sys.__stdout__
         log_file.close()  # stop logging
     else:
-        print("conformation reconstruction finished.")
+        print("configuration reconstruction finished.")
         adata.write_h5ad(filename=outpath + "adata.h5ad")
         sys.stdout = sys.__stdout__
         log_file.close()  # stop logging
@@ -940,7 +974,7 @@ def craft(
     thresh=0.9,
     thresh_rmsd=0.01,
     seed=999,
-    samplename=None,
+    samplename="sample",
     outpath=False,
 ):
     """
@@ -952,7 +986,7 @@ def craft(
     - species (str): The species of the data.
     - nderive (int, optional): The number of genes used for rotation derivation. Default is 10.
     - thresh (float, optional): The threshold for gene filtering. Default is 0.9.
-    - thresh_rmsd (float, optional): The threshold for convergence of the conformation. Default is 0.25.
+    - thresh_rmsd (float, optional): The threshold for convergence of the configuration. Default is 0.25.
     - seed (int, optional): The random seed for reproducibility. Default is 999.
     - samplename (str, optional): The name of the sample. Default is None.
     - outpath (bool or str, optional): The output path for writing PDB files. Default is False.
@@ -1014,8 +1048,16 @@ def craft(
             seed=seed,
             prefix=samplename + "_initial_chr",
         )
+    ### test codes: save initial adata ###
+    # adata.obsm["Rotation"] = RM
+    # adata.uns["F"] = pd.DataFrame(F, index=GeneUIDs)
+    # adata.uns["F"].columns = adata.uns["F"].columns.astype(str)
+    # adata.uns["Z"] = Z
+    # adata.uns["reconstruction_celllist"] = CellUIDs
+    # adata.write_h5ad(filename=outpath + "loop_0_adata.h5ad")
 
-    for loop in range(30):  # update conformation F
+    # start iteration
+    for loop in range(30):  # update configuration F
         ## step1: derive Rotation Matrix R
         Mask = MASK(
             gem,
@@ -1024,7 +1066,7 @@ def craft(
             Ngene=nderive,
         )
         RM, Z, CellUIDs, adata = DeriveRotation(Z, F, Mask, CellUIDs, adata)
-        ## step2: update conformation F with R and Z
+        ## step2: update configuration F with R and Z
         try:
             newF, Z, GeneUIDs, F = UpdateF(RM, Z, GeneUIDs, F)
         except np.linalg.LinAlgError as e:
@@ -1036,10 +1078,16 @@ def craft(
             normalizeF(F, method="mean"), normalizeF(newF, method="mean")
         )[2]
         print(
-            "RMSD between New Configuration and Old Configuration for loop "
+            "["
+            + datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            + "] "
+            + "RMSD between New Configuration and Old Configuration for loop "
             + str(loop + 1)
-            + " is: "
+            + " is "
             + str(rmsd)
+            + " with "
+            + str(len(GeneUIDs))
+            + " transcription centers located."
         )
         if outpath is not False:
             write_pdb(
@@ -1051,18 +1099,18 @@ def craft(
                 seed=seed,
                 prefix=samplename + "_updated" + str(loop + 1) + "times_chr",
             )
-        # renew conformation F
+        # renew configuration F
         F = newF
 
-        ### test: save processing adata ###
+        ### test codes: save processing adata ###
         # adata.obsm["Rotation"] = RM
         # adata.uns["F"] = pd.DataFrame(F, index=GeneUIDs)
         # adata.uns["F"].columns = adata.uns["F"].columns.astype(str)
         # adata.uns["Z"] = Z
         # adata.uns["reconstruction_celllist"] = CellUIDs
-        # adata.write_h5ad(filename=outpath + "loop_" + str(loop) + "_adata.h5ad")
+        # adata.write_h5ad(filename=outpath + "loop_" + str(loop + 1) + "_adata.h5ad")
 
-        ## step3: check if conformation converges
+        ## step3: check if configuration converges
         if rmsd < thresh_rmsd:
             break
     print("Number of total transcription centers is: " + str(F.shape[0]))
@@ -1173,6 +1221,8 @@ def main():
         seed = args.seed
     else:
         seed = random.randint(0, 1000)
+    random.seed(seed)
+    np.random.seed(seed)
 
     ################ Check Gem Header ################
     gem_header = read_gem_header(args.gem_path, sep=args.sep)
@@ -1198,40 +1248,49 @@ def main():
         )
         # run cytocraft by order
         for ct, ct_path in split_paths.items():
+            # define output path
+            SN = os.path.basename(os.path.splitext(ct_path)[0])
+            TID = generate_id()
+            ct_path = ct_path + "/" + SN + "_" + TID + "/"
             run_craft(
                 gem_path=ct_path,
                 species=args.species,
                 seed=seed,
-                out_path=args.out_path,
+                outpath=args.out_path,
                 sep="\t",
                 threshold_for_gene_filter=args.gene_filter_thresh,
                 threshold_for_rmsd=args.rmsd_thresh,
-                Ngene_for_rotation_derivation=args.number,
+                n_anchor=args.number,
                 percent_of_gene_for_rotation_derivation=args.percent,
+                sn=SN,
             )
             os.remove(ct_path)
 
     else:  # run single cell type
         print("Running Single-Celltype Mode")
         try:
+            # define output path
+            TID = generate_id()
+            out_path = args.out_path + "/" + TID + "/"
+            # run craft
             run_craft(
                 gem_path=args.gem_path,
                 species=args.species,
                 seed=seed,
-                out_path=args.out_path,
+                outpath=out_path,
                 sep=args.sep,
                 threshold_for_gene_filter=args.gene_filter_thresh,
                 threshold_for_rmsd=args.rmsd_thresh,
-                Ngene_for_rotation_derivation=args.number,
+                n_anchor=args.number,
                 percent_of_gene_for_rotation_derivation=args.percent,
             )
         except Exception as e:
             print(
                 f"{type(e).__name__} at line {e.__traceback__.tb_lineno} of {__file__}: {e}"
             )
-            print("conformation reconstruction failed.")
+            print("configuration reconstruction failed.")
         else:
-            print("conformation reconstruction finished.")
+            print("configuration reconstruction finished.")
 
 
 if __name__ == "__main__":

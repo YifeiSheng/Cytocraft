@@ -1,18 +1,38 @@
 # Cytocraft
 
 <p align="center">
-	<img src=https://github.com/YifeiSheng/Cytocraft/raw/main/figure/Figure1.Overview.png>
+  <img src=https://github.com/YifeiSheng/Cytocraft/raw/main/figure/Figure1.Overview.png>
 </p>
 
 ## Overview
 
 The Cytocraft package generates a 3D reconstruction of transcription centers based on subcellular resolution spatial transcriptomics.
 
-## Installaion
+## System Requirements
+
+- **Operating Systems**: 
+  - Ubuntu 20.04
+  - macOS 11.2
+  - Windows 10
+- **Software Dependencies**:
+  - Python 3.8 or higher
+  - Required Python packages: numpy, pandas, scanpy, matplotlib, shapely
+- **Tested Versions**:
+  - Python 3.8, 3.9, 3.12
+- **Hardware Requirements**:
+  - No specific non-standard hardware required
+
+## Installation
 
 ```
 pip install cytocraft
 ```
+
+### Installation Guide
+
+1. Ensure Python 3.8 or higher is installed.
+2. Run the command above to install Cytocraft and its dependencies.
+3. Typical install time on a "normal" desktop computer is approximately 1-5 minutes.
 
 ## Interactive Mode Usage
 
@@ -23,7 +43,7 @@ import cytocraft.craft as cc
 ### read input 
 
 ```
-gem_path = './data/mice/example_scgem.csv'
+gem_path = 'path_to_your_data.csv'
 gem = cc.read_gem_as_csv(gem_path, sep=',')
 adata = cc.read_gem_as_adata(gem_path, sep=',')
 ```
@@ -34,9 +54,9 @@ adata = cc.read_gem_as_adata(gem_path, sep=',')
 adata = cc.craft(
   gem=gem,
   adata=adata,
-  species='Mice',
-  seed=999,
-  samplename='example'
+  species='YourSpecies',
+  seed=your_seed,
+  samplename='your_sample_name'
   )
 ```
 
@@ -83,3 +103,27 @@ python craft.py -i ./data/SS200000108BR_A3A4_scgem.Spinal_cord_neuron.csv -o ./r
 ```
 python craft.py -i ./data/SSSS200000108BR_A3A4_scgem.csv -o ./results/ --species Mouse --celltype ./data/cell_feature.csv --ctkey cell_type --cikey cell_id
 ```
+
+## Demo
+
+### Instructions to run on demo data
+1. Download the example data from the repository.
+2. Open and run the [tutorial](https://github.com/YifeiSheng/Cytocraft/blob/main/tutorial.ipynb) notebook provided in the repository to process the demo data step-by-step.
+
+### Expected Output
+### Expected Output
+
+- A h5ad format adata file containing the 3D reconstruction, rotation matrices of cells, and all other input information.
+- A log file containing the following information:
+  - Species
+  - Sample Name
+  - Seed
+  - Cell Number
+  - Gene Number
+  - Arguments
+  - Task ID
+  - RMSD values in each loop
+  - Number of transcription centers in the configuration.
+
+### Expected Run Time
+- Approximately 5-10 minutes.

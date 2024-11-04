@@ -11,7 +11,7 @@
   packages = ["src/cytocraft"]
 [project]
   name = "cytocraft"
-  version = "0.1.4"
+  version = "0.1.11"
   dependencies = ["scanpy","shapely"]
   authors = [
     { name="Yifei Sheng", email="yfsheng6@gmail.com" },
