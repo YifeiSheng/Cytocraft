@@ -125,4 +125,4 @@ python craft.py -i ./data/SSSS200000108BR_A3A4_scgem.csv -o ./results/ --species
   - Number of transcription centers in the configuration.
 
 ### Expected Run Time
-- Approximately 5-10 minutes.
+- Approximately 5-20 hours.

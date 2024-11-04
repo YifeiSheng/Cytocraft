@@ -6,7 +6,6 @@ import scanpy as sc
 from tqdm import tqdm
 from pathlib import Path
 from scipy import linalg as LA
-from scipy.linalg import LinAlgWarning
 from scipy.spatial.transform import Rotation as R
 import scipy.cluster.hierarchy as sch
 from cytocraft import model
@@ -20,9 +19,6 @@ warnings.filterwarnings("ignore")
 
 """
 This module implements main functions of Cytocraft.
-
-Authors: Yifei Sheng, Shiying Li, and Shuai Cheng Li.
-Email: yfsheng6@gmail.com
 """
 
 
@@ -40,12 +36,9 @@ def get_centers(gem, CellIDs, GeneIDs):
 
     """
     Z = np.zeros((len(CellIDs) * 2, len(GeneIDs)))
-    i = 0
-    for c in CellIDs:
-        j = 0
-        # subset the gem in terms of individual cells
+    for i, c in enumerate(CellIDs):
         gem_cell = gem[gem.CellID == c]
-        for n in GeneIDs:
+        for j, n in enumerate(GeneIDs):
             if n not in gem_cell.geneID.values:
                 x_median = np.nan
                 y_median = np.nan
@@ -61,27 +54,20 @@ def get_centers(gem, CellIDs, GeneIDs):
                 )
             Z[i * 2, j] = x_median
             Z[i * 2 + 1, j] = y_median
-            j += 1
-        i += 1
     return Z
 
 
 def MASK(gem, GeneIDs, CellIDs, Ngene):
-    mask = np.zeros((len(CellIDs), len(GeneIDs)))
-    i = 0
-    for c in CellIDs:
-        gem_cell = gem[gem.CellID == c]
-        GeneUIDs_cell = (
-            gem_cell.groupby(["geneID"])["MIDCount"]
-            .count()
-            .reset_index(name="Count")
-            .sort_values(["Count"], ascending=False)
-            .geneID[:Ngene]
-        )
-
-        mask[i] = np.isin(GeneIDs, GeneUIDs_cell)
-        i += 1
-    return np.bool_(mask)
+    mask = np.zeros((len(CellIDs), len(GeneIDs)), dtype=bool)
+    geneID_counts = (
+        gem.groupby(["CellID", "geneID"])["MIDCount"].count().reset_index(name="Count")
+    )
+    for i, c in enumerate(CellIDs):
+        top_genes = geneID_counts[geneID_counts["CellID"] == c].nlargest(
+            Ngene, "Count"
+        )["geneID"]
+        mask[i] = np.isin(GeneIDs, top_genes)
+    return mask
 
 
 def DeriveRotation(Z, F, Mask, CellUIDs, adata):
@@ -158,6 +144,7 @@ def UpdateF(RM, Z, GeneUID, *F_old):
     """
     Ncell = int(Z.shape[0] / 2)
     pop_indices = []
+    newF = []
     for j in range(Z.shape[1]):
         a1 = b1 = c1 = d1 = a2 = b2 = c2 = d2 = a3 = b3 = c3 = d3 = 0
         for i in range(Ncell):
@@ -179,28 +166,17 @@ def UpdateF(RM, Z, GeneUID, *F_old):
                 d1 += RM[i, 0, 0] * Z[i * 2, j] + RM[i, 0, 1] * Z[i * 2 + 1, j]
                 d2 += RM[i, 1, 0] * Z[i * 2, j] + RM[i, 1, 1] * Z[i * 2 + 1, j]
                 d3 += RM[i, 2, 0] * Z[i * 2, j] + RM[i, 2, 1] * Z[i * 2 + 1, j]
-            else:
-                # print("skip cell" + str(i) + "for gene" + str(j))
-                pass
 
         args = np.array([[a1, b1, c1], [a2, b2, c2], [a3, b3, c3]])
         results = np.array([d1, d2, d3])
         try:
             newFi = LA.solve(args, results)
-            try:
-                newF = np.append(
-                    newF,
-                    [newFi],
-                    axis=0,
-                )
-            except NameError:
-                newF = np.array([newFi])
-        except (np.linalg.LinAlgError, LinAlgWarning) as err:
-            print("Gene No.[" + str(j + 1) + "] is removed due to: ", err)
+            newF.append(newFi)
+        except (LA.LinAlgError, LA.LinAlgWarning) as err:
+            print(f"Gene No.[{j + 1}] is removed due to: {err}")
             pop_indices.append(j)
 
-    # Drop genes
-    ## F_old also need to drop genes, so that F can be compared
+    newF = np.array(newF)
     if F_old:
         F_old = F_old[0]
         for i in sorted(pop_indices, reverse=True):
@@ -243,8 +219,8 @@ def kabsch_numpy(in_crds1, in_crds2, center=False):
     # compute the covariance matrix
     correlation_matrix = np.dot(np.transpose(crds1), crds2)
     # SVD decomposition
-    v, s, w = np.linalg.svd(correlation_matrix)
-    is_reflection = (np.linalg.det(v) * np.linalg.det(w)) < 0.0
+    v, s, w = LA.svd(correlation_matrix)
+    is_reflection = (LA.det(v) * LA.det(w)) < 0.0
     if is_reflection:
         s[-1] = -s[-1]
 
@@ -410,7 +386,7 @@ def gene_gene_distance_matrix(F):
     F_values = F.values  # Convert DataFrame to numpy array for faster access
     for n in range(N):
         for m in range(n + 1):
-            d = np.linalg.norm(F_values[n] - F_values[m])
+            d = LA.norm(F_values[n] - F_values[m])
             DM[n, m] = DM[m, n] = d
     return DM
 
@@ -884,13 +860,13 @@ def legalname(string):
 
 def mean_radius(x):
     center = np.mean(x, axis=0)
-    dist = np.linalg.norm(x - center, axis=1)
+    dist = LA.norm(x - center, axis=1)
     return np.mean(dist)  # Return the average distance, i.e. the average radius
 
 
 def normalizeF(x, method="mean"):
     if method == "L2norm":
-        return x / (np.linalg.norm(x) ** 2)
+        return x / (LA.norm(x) ** 2)
     elif method == "mean":
         r = mean_radius(x)
         return x / r
@@ -1069,7 +1045,7 @@ def craft(
         ## step2: update configuration F with R and Z
         try:
             newF, Z, GeneUIDs, F = UpdateF(RM, Z, GeneUIDs, F)
-        except np.linalg.LinAlgError as e:
+        except LA.LinAlgError as e:
             print(
                 f"{type(e).__name__} at line {e.__traceback__.tb_lineno} of {__file__}: {e}"
             )
