@@ -98,7 +98,7 @@ def DeriveRotation(Z, F, Mask, CellUIDs, adata):
             # filter cells
             Zi_filter = Zi[~np.isnan(Zi).any(axis=1), :]
             while Zi_filter.shape[0] < 6:
-                # reduce the numebr of gene in Mask if cell number less than 3
+                # reduce one gene at a time if cell number < 3; print error message if no gene left
                 Mask[i, :] = change_last_true(Mask[i, :])
                 # print("reduce one gene for cell " + str(i))
                 # filter genes
@@ -111,7 +111,9 @@ def DeriveRotation(Z, F, Mask, CellUIDs, adata):
             R = kabsch_numpy(np.dot(model.Rs[idx], model.Ss[0]).T, Fi)[0]
             Rotation[i] = R
         except Exception as err:
-            print("Cell ID [" + str(CellUIDs[i]) + "] is removed due to: ", err)
+            print(
+                f"Cell ID [{CellUIDs[i]}] is removed due to: {err} at line {traceback.extract_tb(err.__traceback__)[-1][1]}"
+            )
             pop_indices.append(i)
     for i in sorted(pop_indices, reverse=True):
         Rotation = np.delete(Rotation, obj=i, axis=0)
@@ -290,6 +292,15 @@ def normalizeZ(Z):
     for i in range(int(Z.shape[0])):
         normZ[i] = Z[i] - np.nanmean(Z[i])
     return normZ
+
+
+def filterCount(gem, min_exp=1):
+    # Filter genes with low MIDCount in each cell
+    gene_count = gem.groupby(["CellID", "geneID"])["MIDCount"].sum()
+    mask = gene_count > min_exp
+    filtered_gem = gem[gem.set_index(["CellID", "geneID"]).index.isin(mask[mask].index)]
+
+    return filtered_gem
 
 
 def filterGenes(array, Genes, threshold):
@@ -740,12 +751,14 @@ def read_gem_as_csv(path, sep="\t"):
     return gem
 
 
-def read_gem_as_adata(gem_path, sep="\t", SN="adata"):
+def read_gem_as_adata(gem_path, genes, cells, sep="\t", SN="adata"):
     data = read_gem(file_path=gem_path, bin_type="cell_bins", sep=sep)
     data.tl.raw_checkpoint()
     adata = stereo_to_anndata(
         data, flavor="scanpy", sample_id=SN, reindex=False, output=None
     )
+    adata.uns["gene_list"] = genes
+    adata.uns["cell_list"] = cells
     return adata
 
 
@@ -799,7 +812,8 @@ def find_subarray(arr1, arr2):
     for i in range(n):
         if np.array_equal(arr1[i], arr2):
             return i
-    return print("Error! Try to reduce Ngene in MASK function")
+    warnings.warn("Try to reduce Anchor Gene Number")
+    return None
 
 
 def generate_random_rotation_matrices(n):
@@ -911,17 +925,55 @@ def run_craft(
 
     # read input gem
     gem = read_gem_as_csv(gem_path, sep=sep)
-    adata = read_gem_as_adata(gem_path, sep=sep, SN=sn)
     GeneUIDs = get_GeneUID(gem)
-    if n_anchor is None:
-        n_anchor = int(float(percent_of_gene_for_rotation_derivation) * len(GeneUIDs))
+    CellUIDs = get_CellUID(gem)
+    Z = get_centers(gem, CellUIDs, GeneUIDs)
+    # generate and normalize observation TC matrix 'Z'
+    Z, GeneUIDs = filterGenes(Z, GeneUIDs, threshold=threshold_for_gene_filter)
+    Z = normalizeZ(Z)
+    # generate adata
+    adata = read_gem_as_adata(gem_path, sep=sep, SN=sn, genes=GeneUIDs, cells=CellUIDs)
+    # if Mask is needed
+    n_anchor = n_anchor or int(
+        float(percent_of_gene_for_rotation_derivation) * len(GeneUIDs)
+    )
+    Mask = MASK(
+        gem,
+        GeneIDs=GeneUIDs,
+        CellIDs=CellUIDs,
+        Ngene=n_anchor,
+    )
+    # run cytocraft
     try:
+        ## log
+        print(
+            "Speceis: "
+            + species
+            + "\n"
+            + "Sample Name: "
+            + sn
+            + "\n"
+            + "Seed: "
+            + str(seed)
+            + "\n"
+            + "Input Cell Number: "
+            + str(len(CellUIDs))
+            + "\n"
+            + "Input Gene Number: "
+            + str(len(GeneUIDs))
+            + "\n"
+            + "Cutoff for gene filter is: "
+            + str(threshold_for_gene_filter)
+            + "\n"
+            + "Anchor Gene Number is: "
+            + str(n_anchor)
+            + "\n"
+        )
         adata = craft(
-            gem=gem,
-            adata=adata,
-            species=species,
-            nderive=n_anchor,
-            thresh=threshold_for_gene_filter,
+            Z,
+            adata,
+            species,
+            Mask=Mask,
             thresh_rmsd=threshold_for_rmsd,
             seed=seed,
             samplename=sn,
@@ -943,11 +995,10 @@ def run_craft(
 
 
 def craft(
-    gem,
+    Z,
     adata,
     species,
-    nderive=10,
-    thresh=0.9,
+    Mask=False,
     thresh_rmsd=0.01,
     seed=999,
     samplename="sample",
@@ -957,11 +1008,10 @@ def craft(
     Perform the cytocraft algorithm to generate a 3D reconstruction of transcription centers.
 
     Parameters:
-    - gem (numpy.ndarray): The gene expression matrix.
+    - Z (np.ndarray): The input data matrix containing the transcription centers.
     - adata (AnnData): The annotated data object containing cell and gene information.
     - species (str): The species of the data.
-    - nderive (int, optional): The number of genes used for rotation derivation. Default is 10.
-    - thresh (float, optional): The threshold for gene filtering. Default is 0.9.
+    - Mask (np.ndarray, optional): The mask for gene filtering. Default is False.
     - thresh_rmsd (float, optional): The threshold for convergence of the configuration. Default is 0.25.
     - seed (int, optional): The random seed for reproducibility. Default is 999.
     - samplename (str, optional): The name of the sample. Default is None.
@@ -975,42 +1025,15 @@ def craft(
     random.seed(seed)
     np.random.seed(seed)
     TID = generate_id()
+
+    GeneUIDs = adata.uns["gene_list"]
+    CellUIDs = adata.uns["cell_list"]
+    if Mask is False:
+        Mask = np.ones((len(CellUIDs), len(GeneUIDs)), dtype=bool)
+
     # run cytocraft
-    GeneUIDs = get_GeneUID(gem)
-    CellUIDs = get_CellUID(gem)
-
-    print("Speceis: " + species)
-    if samplename:
-        print("Sample Name: " + samplename)
-
-    print(
-        "Seed: "
-        + str(seed)
-        + "\n"
-        + "Cell Number: "
-        + str(len(CellUIDs))
-        + "\n"
-        + "Gene Number: "
-        + str(len(GeneUIDs))
-        + "\n"
-        + "Cutoff for gene filter is: "
-        + str(thresh)
-        + "\n"
-        + "Anchor Gene Number is: "
-        + str(nderive)
-        + "\n"
-        + "Task ID: "
-        + TID
-        + "\n"
-    )
-
     # reading corresponding gene annotation file as dictionary
     gene_chr = get_gene_chr(species)
-
-    # generate and normalize observation TC matrix 'Z'
-    Z = get_centers(gem, CellUIDs, GeneUIDs)
-    Z, GeneUIDs = filterGenes(Z, GeneUIDs, threshold=thresh)
-    Z = normalizeZ(Z)
     # generate random Rotation Matrix 'R'
     RM = generate_random_rotation_matrices(int(Z.shape[0] / 2))
     F, Z, GeneUIDs = UpdateF(RM, Z, GeneUIDs)
@@ -1035,12 +1058,6 @@ def craft(
     # start iteration
     for loop in range(30):  # update configuration F
         ## step1: derive Rotation Matrix R
-        Mask = MASK(
-            gem,
-            GeneIDs=GeneUIDs,
-            CellIDs=CellUIDs,
-            Ngene=nderive,
-        )
         RM, Z, CellUIDs, adata = DeriveRotation(Z, F, Mask, CellUIDs, adata)
         ## step2: update configuration F with R and Z
         try:
@@ -1096,6 +1113,7 @@ def craft(
     adata.uns["F"].columns = adata.uns["F"].columns.astype(str)
     adata.uns["Z"] = Z
     adata.uns["reconstruction_celllist"] = CellUIDs
+    adata.uns["reconstruction_genelist"] = GeneUIDs
     return adata
 
 

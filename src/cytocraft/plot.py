@@ -317,7 +317,7 @@ def draw_5NN(G, title, save_path):
         nodes_y.append(y)
         nodes_z.append(z)
         # x, y, z = pos
-        node_s.append(np.sqrt(node_size[node]).tolist() * 900)
+        node_s.append(np.sqrt(node_size[node]) * 900)
         nodes.append(node)
 
         # ax.scatter(x, y, z, c='b', s=node_s)
