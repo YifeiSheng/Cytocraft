@@ -224,6 +224,13 @@ def centerX(X):
 
 
 def main():
+    """
+    Cytocraft simulation & reconstruction.
+    Baseline comparison scripts:
+      - simulation_baseline_average.py
+      - simulation_baseline_isomap.py
+    These share the same CLI arguments and write analogous outputs (PDB + CSV row).
+    """
     # Read auguments
     GenomeStructure = pd.read_csv(sys.argv[1], delimiter="\t")
     sample_name = os.path.basename(sys.argv[1]).split(".")[0]
@@ -307,9 +314,9 @@ def main():
     TID = generate_id()
 
     # start logging
-    # stdout = sys.stdout
-    # log_file = open(outpath + "/" + TID + ".log", "w")
-    # sys.stdout = log_file
+    stdout = sys.stdout
+    log_file = open(outpath + "/" + TID + ".log", "w")
+    sys.stdout = log_file
     print(f"The seed is {seed}.")
 
     ##### GENERATE SIMULATION DATA
@@ -454,7 +461,7 @@ def main():
 
     ##### update X
     W = get_centers(gem, gem.CellID.drop_duplicates().values, X)
-    W = normalizeW(W)
+    W = normalizeZ(W)
     # get rotation R through shared X and input W
     RM = generate_random_rotation_matrices(int(W.shape[0] / 2))
     CellUIDs = list(gem.CellID.drop_duplicates())
@@ -569,8 +576,8 @@ def main():
     )
 
     # stop logging
-    # sys.stdout = stdout
-    # log_file.close()
+    sys.stdout = stdout
+    log_file.close()
 
     row = (
         TID,
