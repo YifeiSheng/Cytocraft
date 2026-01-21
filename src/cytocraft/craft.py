@@ -911,6 +911,7 @@ def run_craft(
     n_anchor=None,
     percent_of_gene_for_rotation_derivation=None,
     sn="sample",
+    n_starts=5,
 ):
     # set seed
     random.seed(seed)
@@ -978,6 +979,7 @@ def run_craft(
             seed=seed,
             samplename=sn,
             outpath=outpath,
+            n_starts=n_starts,
         )
     except Exception as e:
         print(
@@ -994,6 +996,144 @@ def run_craft(
         log_file.close()  # stop logging
 
 
+def _single_run_craft(
+    Z,
+    adata,
+    species,
+    Mask,
+    thresh_rmsd,
+    seed,
+    samplename,
+    outpath,
+    gene_chr,
+    start_id=0,
+    verbose=True,
+):
+    """
+    Perform a single run of the cytocraft algorithm with a specific random initialization.
+
+    Parameters:
+    - Z (np.ndarray): The input data matrix containing the transcription centers.
+    - adata (AnnData): The annotated data object containing cell and gene information.
+    - species (str): The species of the data.
+    - Mask (np.ndarray): The mask for gene filtering.
+    - thresh_rmsd (float): The threshold for convergence of the configuration.
+    - seed (int): The random seed for this run.
+    - samplename (str): The name of the sample.
+    - outpath (bool or str): The output path for writing PDB files.
+    - gene_chr (dict): Gene chromosome dictionary.
+    - start_id (int): The ID of this start for logging purposes.
+    - verbose (bool): Whether to print progress messages.
+
+    Returns:
+    - dict: Results dictionary containing adata, final_rmsd, converged status, etc.
+    """
+    # set seed for this run
+    random.seed(seed)
+    np.random.seed(seed)
+
+    # Make copies to avoid modifying originals
+    Z_run = np.copy(Z)
+    adata_run = adata.copy()
+    Mask_run = np.copy(Mask)
+
+    GeneUIDs = list(adata_run.uns["gene_list"])
+    CellUIDs = list(adata_run.uns["cell_list"])
+
+    # generate random Rotation Matrix 'R'
+    RM = generate_random_rotation_matrices(int(Z_run.shape[0] / 2))
+    
+    try:
+        F, Z_run, GeneUIDs = UpdateF(RM, Z_run, GeneUIDs)
+    except LA.LinAlgError as e:
+        if verbose:
+            print(f"[Start {start_id}] Failed at initialization: {e}")
+        return {
+            'converged': False,
+            'error': str(e),
+            'final_rmsd': np.inf,
+            'adata': None,
+        }
+
+    # Track RMSD history for convergence analysis
+    rmsd_history = []
+    final_rmsd = np.inf
+    converged = False
+
+    # start iteration
+    for loop in range(30):  # update configuration F
+        ## step1: derive Rotation Matrix R
+        RM, Z_run, CellUIDs, adata_run = DeriveRotation(Z_run, F, Mask_run, CellUIDs, adata_run)
+        ## step2: update configuration F with R and Z
+        try:
+            newF, Z_run, GeneUIDs, F = UpdateF(RM, Z_run, GeneUIDs, F)
+        except LA.LinAlgError as e:
+            if verbose:
+                print(f"[Start {start_id}] LinAlgError at loop {loop + 1}: {e}")
+            return {
+                'converged': False,
+                'error': str(e),
+                'final_rmsd': np.inf,
+                'adata': None,
+            }
+        
+        rmsd = kabsch_numpy(
+            normalizeF(F, method="mean"), normalizeF(newF, method="mean")
+        )[2]
+        rmsd_history.append(rmsd)
+        
+        if verbose:
+            print(
+                "["
+                + datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                + f"] [Start {start_id}] "
+                + "RMSD between New Configuration and Old Configuration for loop "
+                + str(loop + 1)
+                + " is "
+                + str(rmsd)
+                + " with "
+                + str(len(GeneUIDs))
+                + " transcription centers located."
+            )
+        
+        # renew configuration F
+        F = newF
+        final_rmsd = rmsd
+
+        ## step3: check if configuration converges
+        if rmsd < thresh_rmsd:
+            converged = True
+            break
+        
+        # Check for convergence plateau
+        if len(rmsd_history) > 5:
+            recent = rmsd_history[-5:]
+            if max(recent) - min(recent) < 0.0001:
+                converged = True
+                break
+
+    if verbose:
+        print(f"[Start {start_id}] Final RMSD: {final_rmsd:.6f}, Converged: {converged}")
+
+    # Store results in adata
+    adata_run.obsm["Rotation"] = RM
+    adata_run.uns["F"] = pd.DataFrame(F, index=GeneUIDs)
+    adata_run.uns["F"].columns = adata_run.uns["F"].columns.astype(str)
+    adata_run.uns["Z"] = Z_run
+    adata_run.uns["reconstruction_celllist"] = CellUIDs
+    adata_run.uns["reconstruction_genelist"] = GeneUIDs
+
+    return {
+        'converged': converged,
+        'error': None,
+        'final_rmsd': final_rmsd,
+        'adata': adata_run,
+        'F': F,
+        'GeneUIDs': GeneUIDs,
+        'rmsd_history': rmsd_history,
+    }
+
+
 def craft(
     Z,
     adata,
@@ -1003,27 +1143,28 @@ def craft(
     seed=999,
     samplename="sample",
     outpath=False,
+    n_starts=5,
 ):
     """
-    Perform the cytocraft algorithm to generate a 3D reconstruction of transcription centers.
+    Perform the cytocraft algorithm with multi-start strategy to generate a 3D reconstruction 
+    of transcription centers. Runs the optimization from n_starts distinct random initializations 
+    and selects the solution with the lowest final reconstruction error.
 
     Parameters:
     - Z (np.ndarray): The input data matrix containing the transcription centers.
     - adata (AnnData): The annotated data object containing cell and gene information.
     - species (str): The species of the data.
     - Mask (np.ndarray, optional): The mask for gene filtering. Default is False.
-    - thresh_rmsd (float, optional): The threshold for convergence of the configuration. Default is 0.25.
-    - seed (int, optional): The random seed for reproducibility. Default is 999.
-    - samplename (str, optional): The name of the sample. Default is None.
+    - thresh_rmsd (float, optional): The threshold for convergence of the configuration. Default is 0.01.
+    - seed (int, optional): The base random seed for reproducibility. Default is 999.
+    - samplename (str, optional): The name of the sample. Default is "sample".
     - outpath (bool or str, optional): The output path for writing PDB files. Default is False.
+    - n_starts (int, optional): Number of random initializations for multi-start strategy. Default is 5.
 
     Returns:
-    - adata (AnnData): The annotated data object with the 3D reconstruction information.
+    - adata (AnnData): The annotated data object with the 3D reconstruction information from the best run.
 
     """
-    # set seed
-    random.seed(seed)
-    np.random.seed(seed)
     TID = generate_id()
 
     GeneUIDs = adata.uns["gene_list"]
@@ -1031,90 +1172,99 @@ def craft(
     if Mask is False:
         Mask = np.ones((len(CellUIDs), len(GeneUIDs)), dtype=bool)
 
-    # run cytocraft
     # reading corresponding gene annotation file as dictionary
     gene_chr = get_gene_chr(species)
-    # generate random Rotation Matrix 'R'
-    RM = generate_random_rotation_matrices(int(Z.shape[0] / 2))
-    F, Z, GeneUIDs = UpdateF(RM, Z, GeneUIDs)
+
+    print("=" * 70)
+    print(f"CYTOCRAFT MULTI-START OPTIMIZATION (n_starts={n_starts})")
+    print("=" * 70)
+    print(f"Base seed: {seed}")
+    print(f"Running {n_starts} independent optimizations...")
+    print("-" * 70)
+
+    # Run multiple starts with different random seeds
+    all_results = []
+    for start_id in range(n_starts):
+        # Generate unique seed for each start
+        start_seed = seed + start_id * 1000
+        
+        print(f"\n[Start {start_id + 1}/{n_starts}] Seed: {start_seed}")
+        print("-" * 40)
+        
+        result = _single_run_craft(
+            Z=Z,
+            adata=adata,
+            species=species,
+            Mask=Mask,
+            thresh_rmsd=thresh_rmsd,
+            seed=start_seed,
+            samplename=samplename,
+            outpath=False,  # Don't write intermediate PDBs for each start
+            gene_chr=gene_chr,
+            start_id=start_id + 1,
+            verbose=True,
+        )
+        result['start_id'] = start_id + 1
+        result['seed'] = start_seed
+        all_results.append(result)
+
+    # Select the best result (lowest final RMSD among converged runs)
+    converged_results = [r for r in all_results if r['converged'] and r['adata'] is not None]
+    
+    print("\n" + "=" * 70)
+    print("MULTI-START SUMMARY")
+    print("=" * 70)
+    
+    for r in all_results:
+        status = "Converged" if r['converged'] else "Failed"
+        rmsd_str = f"{r['final_rmsd']:.6f}" if r['final_rmsd'] != np.inf else "N/A"
+        print(f"  Start {r['start_id']}: RMSD={rmsd_str}, Status={status}")
+    
+    if converged_results:
+        best_result = min(converged_results, key=lambda x: x['final_rmsd'])
+        print(f"\nBest result: Start {best_result['start_id']} with RMSD={best_result['final_rmsd']:.6f}")
+    else:
+        # If none converged, pick the one with lowest RMSD that has valid adata
+        valid_results = [r for r in all_results if r['adata'] is not None]
+        if valid_results:
+            best_result = min(valid_results, key=lambda x: x['final_rmsd'])
+            print(f"\nNo runs converged. Using Start {best_result['start_id']} with lowest RMSD={best_result['final_rmsd']:.6f}")
+        else:
+            print("\nAll runs failed. Returning error.")
+            return "All multi-start runs failed"
+    
+    print("=" * 70)
+    
+    # Get the best adata
+    best_adata = best_result['adata']
+    
+    # Write PDB files for the best result if outpath is specified
     if outpath is not False:
+        F = best_result['F']
+        GeneUIDs = best_result['GeneUIDs']
         write_pdb(
             F,
             gene_chr,
             GeneUIDs,
             write_path=outpath,
             sp=species,
-            seed=seed,
-            prefix=samplename + "_initial_chr",
+            seed=best_result['seed'],
+            prefix=samplename + "_best_chr",
         )
-    ### test codes: save initial adata ###
-    # adata.obsm["Rotation"] = RM
-    # adata.uns["F"] = pd.DataFrame(F, index=GeneUIDs)
-    # adata.uns["F"].columns = adata.uns["F"].columns.astype(str)
-    # adata.uns["Z"] = Z
-    # adata.uns["reconstruction_celllist"] = CellUIDs
-    # adata.write_h5ad(filename=outpath + "loop_0_adata.h5ad")
-
-    # start iteration
-    for loop in range(30):  # update configuration F
-        ## step1: derive Rotation Matrix R
-        RM, Z, CellUIDs, adata = DeriveRotation(Z, F, Mask, CellUIDs, adata)
-        ## step2: update configuration F with R and Z
-        try:
-            newF, Z, GeneUIDs, F = UpdateF(RM, Z, GeneUIDs, F)
-        except LA.LinAlgError as e:
-            print(
-                f"{type(e).__name__} at line {e.__traceback__.tb_lineno} of {__file__}: {e}"
-            )
-            return "numpy.linalg.LinAlgError"
-        rmsd = kabsch_numpy(
-            normalizeF(F, method="mean"), normalizeF(newF, method="mean")
-        )[2]
-        print(
-            "["
-            + datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            + "] "
-            + "RMSD between New Configuration and Old Configuration for loop "
-            + str(loop + 1)
-            + " is "
-            + str(rmsd)
-            + " with "
-            + str(len(GeneUIDs))
-            + " transcription centers located."
-        )
-        if outpath is not False:
-            write_pdb(
-                newF,
-                gene_chr,
-                GeneUIDs,
-                write_path=outpath,
-                sp=species,
-                seed=seed,
-                prefix=samplename + "_updated" + str(loop + 1) + "times_chr",
-            )
-        # renew configuration F
-        F = newF
-
-        ### test codes: save processing adata ###
-        # adata.obsm["Rotation"] = RM
-        # adata.uns["F"] = pd.DataFrame(F, index=GeneUIDs)
-        # adata.uns["F"].columns = adata.uns["F"].columns.astype(str)
-        # adata.uns["Z"] = Z
-        # adata.uns["reconstruction_celllist"] = CellUIDs
-        # adata.write_h5ad(filename=outpath + "loop_" + str(loop + 1) + "_adata.h5ad")
-
-        ## step3: check if configuration converges
-        if rmsd < thresh_rmsd:
-            break
-    print("Number of total transcription centers is: " + str(F.shape[0]))
-
-    adata.obsm["Rotation"] = RM
-    adata.uns["F"] = pd.DataFrame(F, index=GeneUIDs)
-    adata.uns["F"].columns = adata.uns["F"].columns.astype(str)
-    adata.uns["Z"] = Z
-    adata.uns["reconstruction_celllist"] = CellUIDs
-    adata.uns["reconstruction_genelist"] = GeneUIDs
-    return adata
+    
+    print("Number of total transcription centers is: " + str(best_result['F'].shape[0]))
+    
+    # Store multi-start metadata in the result
+    best_adata.uns["multistart_info"] = {
+        "n_starts": n_starts,
+        "best_start_id": best_result['start_id'],
+        "best_seed": best_result['seed'],
+        "best_rmsd": best_result['final_rmsd'],
+        "all_rmsds": [r['final_rmsd'] for r in all_results],
+        "convergence_status": [r['converged'] for r in all_results],
+    }
+    
+    return best_adata
 
 
 def parse_args():
@@ -1202,6 +1352,12 @@ def parse_args():
         type=int,
         help="Random seed, default: random int between 0 to 1000",
     )
+    parser.add_argument(
+        "--n_starts",
+        type=int,
+        help="Number of random initializations for multi-start optimization strategy (default: 5)",
+        default=5,
+    )
 
     args = parser.parse_args()
 
@@ -1257,6 +1413,7 @@ def main():
                 n_anchor=args.number,
                 percent_of_gene_for_rotation_derivation=args.percent,
                 sn=SN,
+                n_starts=args.n_starts,
             )
             os.remove(ct_path)
 
@@ -1277,6 +1434,7 @@ def main():
                 threshold_for_rmsd=args.rmsd_thresh,
                 n_anchor=args.number,
                 percent_of_gene_for_rotation_derivation=args.percent,
+                n_starts=args.n_starts,
             )
         except Exception as e:
             print(

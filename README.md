@@ -8,6 +8,8 @@
 
 The Cytocraft package generates a 3D reconstruction of transcription centers based on subcellular resolution spatial transcriptomics.
 
+Cytocraft employs a **multi-start optimization strategy**, running the reconstruction algorithm from multiple distinct random initializations (default: 5) and selecting the solution with the lowest final reconstruction error. This approach improves robustness and helps avoid local minima.
+
 ## System Requirements
 
 - **Operating Systems**: 
@@ -56,13 +58,16 @@ adata = cc.craft(
   adata=adata,
   species='YourSpecies',
   seed=your_seed,
-  samplename='your_sample_name'
+  samplename='your_sample_name',
+  n_starts=5  # Number of random initializations (default: 5)
   )
 ```
 
+The `n_starts` parameter controls the multi-start optimization strategy. Cytocraft will run the reconstruction from `n_starts` distinct random initializations and automatically select the solution with the lowest final reconstruction error.
+
 ## CLI Mode Usage
 ```
-python craft.py [-h] [-p/-n PERCENT/NUMBER] [-t GENE_FILTER_THRESH] [-r RMSD_THRESH] [--sep \t] [-c CELLTYPE] [--ctkey CTKEY] [--cikey CIKEY] [--csep \t] [--seed SEED] -i gem_path -o out_path --species {Human,Mouse,Axolotls,Monkey}
+python craft.py [-h] [-p/-n PERCENT/NUMBER] [-t GENE_FILTER_THRESH] [-r RMSD_THRESH] [--sep \t] [-c CELLTYPE] [--ctkey CTKEY] [--cikey CIKEY] [--csep \t] [--seed SEED] [--n_starts N_STARTS] -i gem_path -o out_path --species {Human,Mouse,Axolotls,Monkey}
 ```
 ### Positional arguments:
 
@@ -94,6 +99,8 @@ python craft.py [-h] [-p/-n PERCENT/NUMBER] [-t GENE_FILTER_THRESH] [-r RMSD_THR
 
   --seed  `Random seed, default: random int between 0 to 1000`
 
+  --n_starts  `Number of random initializations for multi-start optimization strategy, default: 5`
+
 ### One-celltype example:
 ```
 python craft.py -i ./data/SS200000108BR_A3A4_scgem.Spinal_cord_neuron.csv -o ./results/ --species Mouse
@@ -113,6 +120,13 @@ python craft.py -i ./data/SSSS200000108BR_A3A4_scgem.csv -o ./results/ --species
 ### Expected Output
 
 - A h5ad format adata file containing the 3D reconstruction, rotation matrices of cells, and all other input information.
+  - The `adata.uns["multistart_info"]` field contains metadata about the multi-start optimization, including:
+    - `n_starts`: Number of initializations used
+    - `best_start_id`: Which initialization produced the best result
+    - `best_seed`: Random seed of the best run
+    - `best_rmsd`: Final RMSD of the best run
+    - `all_rmsds`: List of final RMSDs from all runs
+    - `convergence_status`: Convergence status for each run
 - A log file containing the following information:
   - Species
   - Sample Name
@@ -121,7 +135,8 @@ python craft.py -i ./data/SSSS200000108BR_A3A4_scgem.csv -o ./results/ --species
   - Gene Number
   - Arguments
   - Task ID
-  - RMSD values in each loop
+  - Multi-start optimization summary
+  - RMSD values in each loop for each start
   - Number of transcription centers in the configuration.
 
 ### Expected Run Time
